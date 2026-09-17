@@ -1,2 +1,5 @@
-# AntManThePro.github.io
-NEXUS public hub — DoubleA @ AntManThePro. Field tools index.
+# antmanthepro.github.io
+
+NEXUS public hub. DoubleA @ AntManThePro.
+
+Live: https://antmanthepro.github.io/
