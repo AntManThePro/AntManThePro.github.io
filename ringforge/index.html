@@ -4,28 +4,18 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0f"/>
-<meta name="robots" content="noindex,nofollow,noarchive"/>
-<meta name="description" content="RINGFORGE NEXUS Module — Ring capability truth layer by DoubleA @AntManThePro"/>
-<meta name="apple-mobile-web-app-capable" content="yes"/>
-<meta name="apple-mobile-web-app-title" content="RINGFORGE"/>
 <title>RINGFORGE // NEXUS — DoubleA x Ring Bot</title>
-<link rel="manifest" href="manifest.webmanifest"/>
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
-<link rel="apple-touch-icon" href="icons/icon.svg"/>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="styles.css"/>
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg"/>
 </head>
 <body>
 <div id="grain"></div><div id="scanlines"></div><div id="vignette"></div>
-
 <section id="gate">
   <div class="gate-card">
     <div class="help">NEXUS · NExtended Xperimental USers</div>
     <h1>RINGFORGE LOCK</h1>
     <div class="sub">WANDERER GATE · NOT A VAULT</div>
-    <p class="help">Client-side hash check only. Stops casual traffic. Contracts still live in page source — labeled as such.</p>
+    <p class="help">Client-side hash check only. Stops casual traffic.</p>
     <input id="gate-key" type="password" autocomplete="current-password" placeholder="MISSION KEY" aria-label="Mission key"/>
     <div style="display:flex;gap:8px;margin-top:12px">
       <button class="btn" id="gate-go">UNLOCK</button>
@@ -35,182 +25,33 @@
     <div class="help" style="margin-top:10px">DoubleA · AntManThePro · RINGFORGE 1.1.0</div>
   </div>
 </section>
-
 <section class="boot" id="boot">
   <img class="boot-mark" src="icons/icon.svg" alt="RINGFORGE" width="72" height="72"/>
   <pre class="boot-log" id="boot-log"></pre>
   <div class="boot-skip">SPACE / TAP — ENTER MISSION CONTROL</div>
 </section>
-
 <header class="kernel" id="kernel" hidden>
   <span class="brand display">NEXUS</span>
   <span class="exp">NExtended Xperimental USers</span>
   <span class="chip ok">DoubleA · AntManThePro</span>
   <span class="chip ok">RINGFORGE 1.1.0</span>
-  <span class="chip">MATRIX v1 · VERIFIED 2026-09-10 CT</span>
-  <span class="chip warn">PARTNER OAUTH: NOT LINKED</span>
-  <span class="chip bad">RUNTIME SOURCE FACTS: UNAVAILABLE</span>
   <span class="chip" id="clock"></span>
-  <button class="btn pink" id="btn-lock" style="margin-left:auto;min-height:28px;padding:4px 8px">LOCK</button>
+  <button class="btn pink" id="btn-lock" style="margin-left:auto">LOCK</button>
 </header>
-
 <main class="app" id="app">
-  <section class="panel active" data-panel="1" id="panel-1">
-    <div class="panel-head">
-      <div>
-        <h2>01 · PROPERTY TOPOLOGY</h2>
-        <div class="sub">FORCE GRAPH · DEVICE FAMILIES FROM DEVICE REGISTRY v1</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="topo-legend" id="topo-legend"></div>
-    <div class="split split-topo">
-      <div class="topo-wrap card" style="padding:0;overflow:hidden">
-        <canvas id="topo-canvas"></canvas>
-      </div>
-      <aside class="card inspector" id="topo-inspector">
-        <h3>Select a family node</h3>
-        <p class="help">Family-level IDs only — no invented device models. Drag · pinch-zoom · click for verified capabilities.</p>
-      </aside>
-    </div>
-  </section>
-
-  <section class="panel" data-panel="2" id="panel-2">
-    <div class="panel-head">
-      <div>
-        <h2>02 · CAPABILITY MATRIX</h2>
-        <div class="sub">SEARCHABLE · FILTERABLE · SOURCE + LAST_VERIFIED</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="filters">
-      <input id="mx-q" type="search" placeholder="Search capability / scope / endpoint…" aria-label="Search matrix"/>
-      <select id="mx-status"><option value="">ALL STATUS</option></select>
-      <select id="mx-scope"><option value="">ALL SCOPE FAMILY</option></select>
-      <select id="mx-flags">
-        <option value="">ALL FLAGS</option>
-        <option value="read">READ</option>
-        <option value="write">WRITE</option>
-        <option value="event">EVENT</option>
-        <option value="webhook">WEBHOOK</option>
-      </select>
-      <span class="help" id="mx-count"></span>
-    </div>
-    <div class="split split-2" style="flex:1;min-height:0">
-      <div class="card" style="padding:0;overflow:auto">
-        <table class="matrix-table" id="mx-table">
-          <thead><tr><th>CAPABILITY</th><th>STATUS</th><th>SCOPE</th><th>R/W/E/H</th><th>SOURCE</th><th>VERIFIED</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-      <aside class="card inspector" id="mx-inspector"><h3>Contract record</h3><p class="help">Click a row.</p></aside>
-    </div>
-  </section>
-
-  <section class="panel" data-panel="3" id="panel-3">
-    <div class="panel-head">
-      <div>
-        <h2>03 · EVENT BUS</h2>
-        <div class="sub">DOCUMENTED WEBHOOKS ONLY · TEMPORAL CLUSTERING + GRAPH DISTANCE</div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <span class="truth mock">MOCK ADAPTER</span>
-        <button class="btn pink" id="bus-pause">SPACE · PAUSE</button>
-      </div>
-    </div>
-    <div class="card" style="padding:10px">
-      <div class="help">Correlation rule <span class="truth derived">RINGFORGE DERIVED</span>: events within <code>Δt ≤ 90s</code> AND same <code>location_id</code> OR adjacent family (graph distance ≤ 1) → incident tagged <b>LIKELY RELATED</b> (never certain). Algorithm: temporal window + BFS family distance on the device-family graph.</div>
-    </div>
-    <div class="bus-layout">
-      <div class="card" style="display:flex;flex-direction:column;min-height:0">
-        <div class="panel-head" style="margin-bottom:6px"><span class="sub">STREAM</span><span class="help" id="bus-stats"></span></div>
-        <div class="event-stream" id="event-stream"></div>
-      </div>
-      <div class="card" style="display:flex;flex-direction:column;min-height:0">
-        <div class="panel-head" style="margin-bottom:6px"><span class="sub">INCIDENTS · LIKELY RELATED</span></div>
-        <div class="event-stream" id="incident-stream"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="panel" data-panel="4" id="panel-4">
-    <div class="panel-head">
-      <div>
-        <h2>04 · SCOPE / OAUTH</h2>
-        <div class="sub">CANONICAL SCOPE REGISTRY v1</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="card" style="overflow:auto;flex:1">
-      <div class="scope-grid" id="scope-grid"></div>
-      <div class="conflict" id="conflict-box"></div>
-      <div style="margin-top:12px" id="oauth-box"></div>
-    </div>
-  </section>
-
-  <section class="panel" data-panel="5" id="panel-5">
-    <div class="panel-head">
-      <div>
-        <h2>05 · ENDPOINT REGISTRY</h2>
-        <div class="sub">AMAZON VISION API · OAUTH · WEBHOOKS</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="filters">
-      <input id="ep-q" type="search" placeholder="Filter endpoints…" aria-label="Filter endpoints"/>
-      <select id="ep-cat"><option value="">ALL CATEGORIES</option></select>
-    </div>
-    <div class="card" style="overflow:auto;flex:1" id="ep-list"></div>
-  </section>
-
-  <section class="panel" data-panel="6" id="panel-6">
-    <div class="panel-head">
-      <div>
-        <h2>06 · TRUTH HUD // HIRE</h2>
-        <div class="sub">RECRUITER READOUT · NEVER SACRIFICE TRUTH FOR FEATURES</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="hire" id="hire"></div>
-  </section>
-
-  <section class="panel" data-panel="7" id="panel-7">
-    <div class="panel-head">
-      <div>
-        <h2>07 · SOURCES / OV</h2>
-        <div class="sub">PRIMARY DOCS · OPEN VERIFICATION · EXPORT</div>
-      </div>
-      <span class="truth fact">RING DOCUMENTATION FACT</span>
-    </div>
-    <div class="card src" id="src-box" style="flex:1;overflow:auto"></div>
-  </section>
+  <section class="panel active" data-panel="1" id="panel-1"><div class="panel-head"><h2>01 · PROPERTY TOPOLOGY</h2></div><div class="topo-legend" id="topo-legend"></div><div class="split split-topo"><div class="topo-wrap card" style="padding:0"><canvas id="topo-canvas"></canvas></div><aside class="card inspector" id="topo-inspector"></aside></div></section>
+  <section class="panel" data-panel="2" id="panel-2"><div class="panel-head"><h2>02 · CAPABILITY MATRIX</h2></div><div class="filters"><input id="mx-q" type="search"/><select id="mx-status"></select><select id="mx-scope"></select><select id="mx-flags"><option value=""></option><option value="read">READ</option><option value="write">WRITE</option><option value="event">EVENT</option><option value="webhook">WEBHOOK</option></select><span id="mx-count"></span></div><div class="split split-2"><div class="card" style="padding:0;overflow:auto"><table class="matrix-table" id="mx-table"><thead><tr><th>CAPABILITY</th><th>STATUS</th><th>SCOPE</th><th>R/W/E/H</th><th>SOURCE</th><th>VERIFIED</th></tr></thead><tbody></tbody></table></div><aside class="card inspector" id="mx-inspector"></aside></div></section>
+  <section class="panel" data-panel="3" id="panel-3"><div class="panel-head"><h2>03 · EVENT BUS</h2><button class="btn pink" id="bus-pause">SPACE · PAUSE</button></div><div id="bus-stats"></div><div class="bus-layout"><div class="event-stream" id="event-stream"></div><div class="event-stream" id="incident-stream"></div></div></section>
+  <section class="panel" data-panel="4" id="panel-4"><div class="panel-head"><h2>04 · SCOPE / OAUTH</h2></div><div id="scope-grid"></div><div id="conflict-box"></div><div id="oauth-box"></div></section>
+  <section class="panel" data-panel="5" id="panel-5"><div class="panel-head"><h2>05 · ENDPOINT REGISTRY</h2></div><div class="filters"><input id="ep-q" type="search"/><select id="ep-cat"></select></div><div id="ep-list"></div></section>
+  <section class="panel" data-panel="6" id="panel-6"><div class="panel-head"><h2>06 · TRUTH HUD</h2></div><div class="hire" id="hire"></div></section>
+  <section class="panel" data-panel="7" id="panel-7"><div class="panel-head"><h2>07 · SOURCES</h2></div><div class="card src" id="src-box"></div></section>
 </main>
-
 <nav class="dock" id="dock" hidden>
-  <button data-go="1" class="on"><span class="ico">◈</span>TOPO</button>
-  <button data-go="2"><span class="ico">▦</span>MATRIX</button>
-  <button data-go="3"><span class="ico">⚡</span>BUS</button>
-  <button data-go="4"><span class="ico">⬡</span>SCOPE</button>
-  <button data-go="5"><span class="ico">⇄</span>API</button>
-  <button data-go="6"><span class="ico">◎</span>TRUTH</button>
-  <button data-go="7"><span class="ico">▣</span>SRC</button>
+  <button data-go="1" class="on">TOPO</button><button data-go="2">MATRIX</button><button data-go="3">BUS</button><button data-go="4">SCOPE</button><button data-go="5">API</button><button data-go="6">TRUTH</button><button data-go="7">SRC</button>
 </nav>
-
-<div class="search-overlay" id="search">
-  <div class="search-box">
-    <div class="help">/ SEARCH · ESC CLOSE</div>
-    <input id="search-input" placeholder="capability, webhook, scope, endpoint…" autocomplete="off"/>
-    <div class="search-hits" id="search-hits"></div>
-  </div>
-</div>
-
-<div class="modal" id="modal">
-  <div class="modal-card">
-    <div class="panel-head"><h3 id="modal-title" class="display" style="margin:0;color:var(--c)">Record</h3><button class="btn" id="modal-close">ESC</button></div>
-    <pre id="modal-body"></pre>
-  </div>
-</div>
-
+<div class="search-overlay" id="search"><div class="search-box"><input id="search-input"/><div class="search-hits" id="search-hits"></div></div></div>
+<div class="modal" id="modal"><div class="modal-card"><div class="panel-head"><h3 id="modal-title">Record</h3><button class="btn" id="modal-close">ESC</button></div><pre id="modal-body"></pre></div></div>
 <script id="RF_DATA" type="application/json">{}</script>
 <script>
 (function(){
@@ -220,80 +61,50 @@
   var msg = document.getElementById("gate-msg");
   var keyEl = document.getElementById("gate-key");
   var fails = 0, lockedUntil = 0, kernelReady = false;
-
-  function hexSha(buf){
-    return [...new Uint8Array(buf)].map(function(b){return b.toString(16).padStart(2,"0");}).join("");
-  }
+  function setMsg(t){ if (msg) msg.textContent = t; }
   async function sha256hex(str){
     var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-    return hexSha(buf);
+    return [...new Uint8Array(buf)].map(function(b){return b.toString(16).padStart(2,"0");}).join("");
   }
-  function setMsg(t){ if (msg) msg.textContent = t; }
-
+  async function loadParts(prefix, n){
+    var parts = [];
+    for (var i=1;i<=n;i++){
+      var r = await fetch(prefix + i + ".txt?v=112", {cache:"no-store"});
+      if (!r.ok) throw new Error(prefix + i + ".txt " + r.status);
+      parts.push(await r.text());
+    }
+    return parts.join("");
+  }
   async function loadKernel(){
     setMsg("LOADING KERNEL…");
-    try {
-      var dataRes = await fetch("data.json?v=111", {cache:"no-store"});
-      if (!dataRes.ok) throw new Error("data.json " + dataRes.status);
-      var json = await dataRes.text();
-      var tag = document.getElementById("RF_DATA");
-      if (tag) tag.textContent = json;
-      await new Promise(function(resolve, reject){
-        var s = document.createElement("script");
-        s.src = "app.js?v=111";
-        s.onload = resolve;
-        s.onerror = function(){ reject(new Error("app.js 404")); };
-        document.body.appendChild(s);
-      });
-      kernelReady = true;
-      setMsg("");
-    } catch (err) {
-      setMsg("KERNEL LOAD FAIL · " + err.message);
-      throw err;
-    }
+    var json = await loadParts("d", 4);
+    document.getElementById("RF_DATA").textContent = json;
+    var app = await loadParts("a", 4);
+    var s = document.createElement("script");
+    s.text = app;
+    document.body.appendChild(s);
+    kernelReady = true;
+    setMsg("");
   }
-
   async function tryUnlock(){
     var now = Date.now();
-    if (now < lockedUntil) {
-      setMsg("LOCKOUT · wait " + Math.ceil((lockedUntil-now)/1000) + "s");
-      return;
-    }
-    var pw = keyEl ? keyEl.value : "";
-    var hex = await sha256hex(GATE_SALT + pw);
+    if (now < lockedUntil) { setMsg("LOCKOUT · wait " + Math.ceil((lockedUntil-now)/1000) + "s"); return; }
+    var hex = await sha256hex(GATE_SALT + (keyEl ? keyEl.value : ""));
     if (hex !== GATE_HASH) {
       fails += 1;
-      if (fails >= 6) {
-        lockedUntil = Date.now() + 60000;
-        fails = 0;
-        setMsg("LOCKOUT 60s · wanderer friction");
-      } else {
-        setMsg("DENIED · " + (6-fails) + " tries left");
-      }
+      if (fails >= 6) { lockedUntil = Date.now() + 60000; fails = 0; setMsg("LOCKOUT 60s"); }
+      else setMsg("DENIED · " + (6-fails) + " tries left");
       return;
     }
     try { sessionStorage.setItem(GATE_KEY, "1"); } catch(e){}
     setMsg("KEY OK · BRINGING KERNEL");
-    try {
-      if (!kernelReady) await loadKernel();
-      document.getElementById("gate").classList.add("out");
-    } catch (err) {
-      setMsg("KEY OK · KERNEL MISSING ON SERVER · " + err.message);
-    }
+    try { if (!kernelReady) await loadKernel(); document.getElementById("gate").classList.add("out"); }
+    catch (err) { setMsg("KEY OK · KERNEL MISSING · " + err.message); }
   }
-
   document.getElementById("gate-go").addEventListener("click", tryUnlock);
-  document.getElementById("gate-clear").addEventListener("click", function(){
-    if (keyEl) keyEl.value = "";
-    setMsg("");
-  });
-  if (keyEl) keyEl.addEventListener("keydown", function(e){
-    if (e.key === "Enter") tryUnlock();
-  });
-
+  document.getElementById("gate-clear").addEventListener("click", function(){ if (keyEl) keyEl.value=""; setMsg(""); });
+  if (keyEl) keyEl.addEventListener("keydown", function(e){ if (e.key==="Enter") tryUnlock(); });
   loadKernel().catch(function(){});
 })();
 </script>
-
-</body>
-</html>
+</body></html>
