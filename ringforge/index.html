@@ -212,24 +212,86 @@
 </div>
 
 <script id="RF_DATA" type="application/json">{}</script>
-
-<script src="rfdata1.js"></script>
-<script src="rfdata2.js"></script>
-<script src="rfdata3.js"></script>
-<script src="rfdata4.js"></script>
-<script src="rfapp1.js"></script>
-<script src="rfapp2.js"></script>
-<script src="rfapp3.js"></script>
-<script src="rfapp4.js"></script>
 <script>
 (function(){
-  var json = (window.RFDATA||[]).join('');
-  var app = (window.RFAPP||[]).join('');
-  var tag = document.getElementById('RF_DATA');
-  if (tag) tag.textContent = json;
-  var s = document.createElement('script');
-  s.text = app;
-  document.body.appendChild(s);
+  var GATE_HASH = "6e724429ff8083ce3dfa92bcd7fee80fc41bc80f039ee7a5b0c484c6bf2f0f37";
+  var GATE_SALT = "rf.v2|";
+  var GATE_KEY = "rf.gate.v2";
+  var msg = document.getElementById("gate-msg");
+  var keyEl = document.getElementById("gate-key");
+  var fails = 0, lockedUntil = 0, kernelReady = false;
+
+  function hexSha(buf){
+    return [...new Uint8Array(buf)].map(function(b){return b.toString(16).padStart(2,"0");}).join("");
+  }
+  async function sha256hex(str){
+    var buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+    return hexSha(buf);
+  }
+  function setMsg(t){ if (msg) msg.textContent = t; }
+
+  async function loadKernel(){
+    setMsg("LOADING KERNEL…");
+    try {
+      var dataRes = await fetch("data.json?v=111", {cache:"no-store"});
+      if (!dataRes.ok) throw new Error("data.json " + dataRes.status);
+      var json = await dataRes.text();
+      var tag = document.getElementById("RF_DATA");
+      if (tag) tag.textContent = json;
+      await new Promise(function(resolve, reject){
+        var s = document.createElement("script");
+        s.src = "app.js?v=111";
+        s.onload = resolve;
+        s.onerror = function(){ reject(new Error("app.js 404")); };
+        document.body.appendChild(s);
+      });
+      kernelReady = true;
+      setMsg("");
+    } catch (err) {
+      setMsg("KERNEL LOAD FAIL · " + err.message);
+      throw err;
+    }
+  }
+
+  async function tryUnlock(){
+    var now = Date.now();
+    if (now < lockedUntil) {
+      setMsg("LOCKOUT · wait " + Math.ceil((lockedUntil-now)/1000) + "s");
+      return;
+    }
+    var pw = keyEl ? keyEl.value : "";
+    var hex = await sha256hex(GATE_SALT + pw);
+    if (hex !== GATE_HASH) {
+      fails += 1;
+      if (fails >= 6) {
+        lockedUntil = Date.now() + 60000;
+        fails = 0;
+        setMsg("LOCKOUT 60s · wanderer friction");
+      } else {
+        setMsg("DENIED · " + (6-fails) + " tries left");
+      }
+      return;
+    }
+    try { sessionStorage.setItem(GATE_KEY, "1"); } catch(e){}
+    setMsg("KEY OK · BRINGING KERNEL");
+    try {
+      if (!kernelReady) await loadKernel();
+      document.getElementById("gate").classList.add("out");
+    } catch (err) {
+      setMsg("KEY OK · KERNEL MISSING ON SERVER · " + err.message);
+    }
+  }
+
+  document.getElementById("gate-go").addEventListener("click", tryUnlock);
+  document.getElementById("gate-clear").addEventListener("click", function(){
+    if (keyEl) keyEl.value = "";
+    setMsg("");
+  });
+  if (keyEl) keyEl.addEventListener("keydown", function(e){
+    if (e.key === "Enter") tryUnlock();
+  });
+
+  loadKernel().catch(function(){});
 })();
 </script>
 
