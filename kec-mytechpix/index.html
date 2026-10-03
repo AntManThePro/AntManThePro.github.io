@@ -677,21 +677,54 @@ function readSlide() {
   document.getElementById('tts-btn').classList.add('speaking');
 }
 
+const COUNTDOWN_SECS = 25, CIRC = 94;
+const GUIDE_CUES = [[0.04,8.66],[9.12,29.21],[29.82,71.17],[71.81,104.19],[104.83,128.09],[128.77,148.0],[148.81,160.91],[161.63,187.29],[188.11,200.4],[201.0,219.15],[219.86,232.8],[233.6,248.35],[249.02,265.25],[265.96,291.96],[292.54,299.56],[300.24,304.36],[305.12,309.21],[309.76,315.01],[315.72,318.96],[319.54,325.06],[325.68,326.62]];
+let guideRaf = 0;
+function playGuideSlide(){
+  const a = document.getElementById('guide-voice');
+  const cue = GUIDE_CUES[cur];
+  if(!a || !cue) return;
+  clearCountdown();
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  clearHighlights();
+  const start = () => {
+    try { a.currentTime = cue[0]; } catch(e) {}
+    a.play().catch(()=>{});
+    const tick = () => {
+      if(!ttsOn) return;
+      const spans = getActiveWordSpans();
+      const dur = Math.max(0.3, cue[1]-cue[0]);
+      const p = Math.min(1, Math.max(0, (a.currentTime-cue[0])/dur));
+      const idx = Math.min(spans.length-1, Math.floor(p*spans.length));
+      clearHighlights();
+      if(spans[idx]){ spans[idx].classList.add('lit'); spans[idx].scrollIntoView({block:'nearest'}); }
+      if(a.currentTime >= cue[1]-0.08){
+        a.pause();
+        clearHighlights();
+        if(autoOn && cur < TOTAL-1 && !isQuizLocked()) startCountdown();
+        return;
+      }
+      guideRaf = requestAnimationFrame(tick);
+    };
+    cancelAnimationFrame(guideRaf);
+    guideRaf = requestAnimationFrame(tick);
+  };
+  if(a.readyState >= 1) start(); else a.addEventListener('loadedmetadata', start, {once:true});
+}
 function toggleTTS() {
   const voice = document.getElementById('guide-voice');
   const btn = document.getElementById('tts-btn');
   ttsOn = !ttsOn;
   if (ttsOn && voice) {
-    window.speechSynthesis && window.speechSynthesis.cancel();
-    voice.currentTime = 0;
-    voice.play().catch(()=>{});
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
     btn.textContent = '🔇 Stop';
     btn.classList.add('speaking');
-    voice.onended = () => { ttsOn = false; btn.textContent = '🎧 Listen · ▶️ Play'; btn.classList.remove('speaking'); };
+    playGuideSlide();
     return;
   }
+  cancelAnimationFrame(guideRaf);
   if (voice) voice.pause();
-  window.speechSynthesis && window.speechSynthesis.cancel();
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
   btn.textContent = '🎧 Listen · ▶️ Play';
   btn.classList.remove('speaking');
   clearCountdown(); clearHighlights();
@@ -706,7 +739,6 @@ function toggleAuto() {
 }
 
 // ── COUNTDOWN ──────────────────────────────────────────────────
-const COUNTDOWN_SECS = 4, CIRC = 94;
 
 function startCountdown() {
   clearCountdown();
@@ -757,9 +789,7 @@ function goTo(index) {
     fromEl.classList.remove('exit-to-left','exit-to-right','animating'); fromEl.style.cssText = '';
     toEl.classList.remove('enter-from-right','enter-from-left','animating'); toEl.classList.add('is-active');
     cur = index; isAnimating = false; updateUI();
-    const guide = document.getElementById('guide-voice');
-    if (ttsOn && !(guide && !guide.paused)) readSlide();
-    if (autoOn && guide && !guide.paused) startCountdown();
+    if (ttsOn) playGuideSlide();
   }, ANIM_MS);
   cur = index; updateUI();
 }
@@ -789,7 +819,7 @@ function answerQuiz(el) {
   fb.textContent = correct ? '✓ Correct' : '✗ Not quite. The correct answer is highlighted in green.';
   fb.className = 'quiz-feedback ' + (correct ? 'good' : 'bad');
   updateUI();
-  if (autoOn && !window.speechSynthesis.speaking) startCountdown();
+  if (autoOn && !ttsOn && !window.speechSynthesis.speaking) startCountdown();
 }
 
 function renderResults() {
