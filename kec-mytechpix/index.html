@@ -757,7 +757,9 @@ function goTo(index) {
     fromEl.classList.remove('exit-to-left','exit-to-right','animating'); fromEl.style.cssText = '';
     toEl.classList.remove('enter-from-right','enter-from-left','animating'); toEl.classList.add('is-active');
     cur = index; isAnimating = false; updateUI();
-    if (ttsOn) readSlide();
+    const guide = document.getElementById('guide-voice');
+    if (ttsOn && !(guide && !guide.paused)) readSlide();
+    if (autoOn && guide && !guide.paused) startCountdown();
   }, ANIM_MS);
   cur = index; updateUI();
 }
