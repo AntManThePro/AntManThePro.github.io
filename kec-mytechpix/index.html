@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>KEC MyTechPix Guide</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #080808; color: #fff;
+    height: 100vh; width: 100vw; overflow: hidden; position: fixed; top: 0; left: 0;
+  }
+  #progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, #0066ff, #00ffaa);
+    transition: width 0.35s ease; z-index: 200; border-radius: 0 2px 2px 0;
+  }
+  #topbar {
+    position: fixed; top: 0; left: 0; right: 0; height: 54px;
+    display: flex; align-items: center; justify-content: center;
+    gap: 10px; z-index: 150; padding-top: 3px;
+  }
+  #tts-btn {
+    background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+    color: #ccc; padding: 8px 20px; border-radius: 30px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  #tts-btn.speaking { background: rgba(0,150,255,0.2); border-color: #0099ff; color: #0099ff; }
+  #auto-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+    color: #555; padding: 8px 16px; border-radius: 30px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  #auto-btn.on { background: rgba(0,200,100,0.15); border-color: #00cc66; color: #00cc66; }
+  #slide-counter { position: fixed; top: 18px; right: 16px; font-size: 11px; color: #444; z-index: 150; font-weight: 700; }
+
+  #countdown-wrap {
+    position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+    z-index: 160; display: none; flex-direction: column; align-items: center; gap: 4px;
+  }
+  #countdown-wrap.visible { display: flex; }
+  #countdown-ring { position: relative; width: 36px; height: 36px; }
+  #countdown-svg { transform: rotate(-90deg); }
+  #countdown-circle { fill: none; stroke: #0099ff; stroke-width: 3; stroke-dasharray: 94; stroke-dashoffset: 94; stroke-linecap: round; }
+  #countdown-num { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 13px; font-weight: 800; color: #0099ff; }
+  #countdown-label { font-size: 10px; color: #333; letter-spacing: 1px; text-transform: uppercase; }
+
+  #slides-container { position: fixed; top: 54px; bottom: 70px; left: 0; right: 0; overflow: hidden; }
+
+  .slide {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    padding: 24px 28px; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    transform: translateX(100%); opacity: 0; visibility: hidden;
+    transition: none; will-change: transform, opacity; z-index: 1;
+  }
+  .slide.is-active { transform: translateX(0); opacity: 1; visibility: visible; z-index: 10; }
+  .slide.enter-from-right { transform: translateX(100%); opacity: 0; visibility: visible; z-index: 9; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease; }
+  .slide.enter-from-right.animating { transform: translateX(0); opacity: 1; }
+  .slide.enter-from-left { transform: translateX(-100%); opacity: 0; visibility: visible; z-index: 9; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease; }
+  .slide.enter-from-left.animating { transform: translateX(0); opacity: 1; }
+  .slide.exit-to-left { transform: translateX(0); opacity: 1; visibility: visible; z-index: 8; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease; }
+  .slide.exit-to-left.animating { transform: translateX(-100%); opacity: 0; }
+  .slide.exit-to-right { transform: translateX(0); opacity: 1; visibility: visible; z-index: 8; transition: transform 0.38s cubic-bezier(0.4,0,0.2,1), opacity 0.38s ease; }
+  .slide.exit-to-right.animating { transform: translateX(100%); opacity: 0; }
+
+  .w { display: inline; border-radius: 3px; padding: 0 1px; }
+  .w.lit { background: #0055ff; color: #fff !important; -webkit-text-fill-color: #fff !important; border-radius: 4px; }
+
+  .t-launch  { background: radial-gradient(ellipse at 50% 35%, #0b1f40 0%, #04080f 100%); }
+  .t-dark    { background: linear-gradient(160deg, #0a0a16 0%, #10101e 100%); }
+  .t-blue    { background: linear-gradient(160deg, #03101f 0%, #051828 100%); }
+  .t-green   { background: linear-gradient(160deg, #031208 0%, #04180a 100%); }
+  .t-red     { background: linear-gradient(160deg, #180305 0%, #220407 100%); }
+  .t-neutral { background: linear-gradient(160deg, #0c0c0c 0%, #141414 100%); }
+  .t-warn    { background: linear-gradient(160deg, #1a1200 0%, #241900 100%); }
+
+  .slide-tag { font-size: 10px; font-weight: 700; letter-spacing: 2.5px; text-transform: uppercase; color: #444; margin-bottom: 10px; text-align: center; width: 100%; }
+  .slide-title { font-size: 25px; font-weight: 800; text-align: center; line-height: 1.2; margin-bottom: 14px; color: #fff; width: 100%; }
+  .hero-logo { font-size: 10px; font-weight: 700; letter-spacing: 3.5px; color: #2a3a50; text-transform: uppercase; margin-bottom: 18px; }
+  .hero-title {
+    font-size: 46px; font-weight: 900; text-align: center; line-height: 1.0;
+    background: linear-gradient(135deg, #ffffff 0%, #77bbff 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 12px;
+  }
+  .hero-sub { font-size: 13px; color: #3a5070; text-align: center; line-height: 1.8; margin-bottom: 40px; }
+  .start-btn {
+    background: linear-gradient(135deg, #0044cc, #0088ff); color: #fff; border: none;
+    padding: 18px 56px; border-radius: 50px; font-size: 18px; font-weight: 900;
+    cursor: pointer; letter-spacing: 2px; box-shadow: 0 8px 30px rgba(0,80,220,0.4); transition: all 0.2s;
+  }
+  .start-btn:active { transform: scale(0.96); }
+
+  .rule-block { width: 100%; max-width: 480px; background: rgba(255,255,255,0.03); border-left: 4px solid #222; border-radius: 10px; padding: 13px 16px; margin: 5px 0; }
+  .rule-block.blue  { border-left-color: #0055ee; }
+  .rule-block.green { border-left-color: #009944; }
+  .rule-block.red   { border-left-color: #bb1111; }
+  .rule-num { font-size: 28px; font-weight: 900; line-height: 1; margin-bottom: 3px; }
+  .rule-block.blue  .rule-num { color: #3388ff; }
+  .rule-block.green .rule-num { color: #22bb55; }
+  .rule-block.red   .rule-num { color: #ff4444; }
+  .rule-block p { font-size: 14px; color: #999; line-height: 1.5; }
+  .rule-block strong { color: #eee; }
+
+  .badge { display: inline-block; padding: 4px 14px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; }
+  .badge.blue  { background: rgba(0,80,220,0.12); color: #3388ff; border: 1px solid rgba(0,80,220,0.35); }
+  .badge.green { background: rgba(0,150,60,0.12); color: #22bb55; border: 1px solid rgba(0,150,60,0.35); }
+  .badge.red   { background: rgba(180,20,20,0.12); color: #ff4444; border: 1px solid rgba(180,20,20,0.35); }
+  .badge.warn  { background: rgba(200,140,0,0.12); color: #ffaa00; border: 1px solid rgba(200,140,0,0.35); }
+
+  .slide-list { width: 100%; max-width: 480px; list-style: none; }
+  .slide-list li { padding: 8px 0 8px 20px; position: relative; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; color: #aaa; line-height: 1.45; }
+  .slide-list li::before { content: '›'; position: absolute; left: 2px; color: #0055ee; font-size: 16px; font-weight: 700; top: 7px; }
+  .slide-list li strong { color: #ddd; }
+
+  .check-list { width: 100%; max-width: 480px; }
+  .check-item { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 14px; color: #aaa; line-height: 1.4; }
+  .check-box { width: 24px; height: 24px; border: 2px solid #2a2a2a; border-radius: 7px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .check-box.checked { background: #009944; border-color: #009944; }
+  .check-box.checked::after { content: '✓'; font-size: 14px; color: #fff; font-weight: 800; }
+
+  .status-item { width: 100%; max-width: 480px; display: flex; gap: 12px; align-items: flex-start; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .sdot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .sdot.blue { background: #0066ff; } .sdot.green { background: #00aa44; }
+  .sdot.yellow { background: #ffaa00; } .sdot.gray { background: #444; } .sdot.red { background: #cc2222; }
+  .s-label { font-size: 13px; font-weight: 700; color: #ddd; }
+  .s-desc { font-size: 12px; color: #666; margin-top: 2px; }
+
+  .info-box { width: 100%; max-width: 480px; border-radius: 12px; padding: 15px 18px; margin-top: 12px; }
+  .info-box.green { background: rgba(0,150,60,0.08); border: 1px solid rgba(0,150,60,0.2); }
+  .info-box.red   { background: rgba(180,20,20,0.08); border: 1px solid rgba(180,20,20,0.2); }
+  .info-box p { font-size: 14px; color: #999; line-height: 1.6; text-align: center; }
+  .info-box strong { color: #eee; }
+
+  .verify-box { width: 100%; max-width: 480px; background: rgba(200,140,0,0.06); border: 1px solid rgba(200,140,0,0.2); border-radius: 14px; padding: 20px; margin-top: 10px; }
+  .verify-box p { font-size: 15px; color: #bbb; line-height: 1.7; }
+  .verify-box strong { color: #fff; }
+
+  .dont-box { width: 100%; max-width: 480px; background: rgba(180,20,20,0.06); border: 1px solid rgba(180,20,20,0.2); border-radius: 10px; padding: 13px 16px; margin-top: 12px; }
+  .dont-label { font-size: 11px; color: #ff4444; font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
+  .dont-box p { font-size: 13px; color: #888; line-height: 1.6; }
+
+  .quote-box { background: rgba(255,255,255,0.03); border-radius: 16px; border: 1px solid rgba(255,255,255,0.07); padding: 26px 22px; max-width: 420px; text-align: center; margin-top: 14px; }
+  .quote-box p { font-size: 17px; line-height: 1.7; color: #aaa; font-style: italic; }
+
+  .quiz-options { width: 100%; max-width: 480px; margin-top: 6px; }
+  .quiz-option {
+    display: block; width: 100%; text-align: left;
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12);
+    color: #bbb; padding: 13px 16px; border-radius: 10px;
+    font-size: 14px; font-weight: 600; font-family: inherit; line-height: 1.4;
+    cursor: pointer; margin: 5px 0; transition: all 0.15s;
+  }
+  .quiz-option:active { transform: scale(0.98); }
+  .quiz-option:disabled { cursor: default; }
+  .quiz-option.correct { background: rgba(0,150,60,0.15); border-color: #00aa44; color: #22bb55; }
+  .quiz-option.wrong   { background: rgba(180,20,20,0.15); border-color: #cc2222; color: #ff5555; }
+  .quiz-feedback { margin-top: 12px; font-size: 14px; font-weight: 700; text-align: center; min-height: 20px; }
+  .quiz-feedback.good { color: #22bb55; }
+  .quiz-feedback.bad  { color: #ff4444; }
+
+  #results-content { display: flex; flex-direction: column; align-items: center; width: 100%; }
+  #pass-mark { width: 110px; height: 110px; margin-bottom: 18px; }
+  #pass-mark circle {
+    fill: none; stroke: #00cc66; stroke-width: 4; stroke-linecap: round;
+    stroke-dasharray: 302; stroke-dashoffset: 302;
+    animation: draw-ring 0.8s ease forwards;
+  }
+  #pass-mark path {
+    fill: none; stroke: #00cc66; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 70; stroke-dashoffset: 70;
+    animation: draw-check 0.5s ease 0.75s forwards;
+  }
+  @keyframes draw-ring  { to { stroke-dashoffset: 0; } }
+  @keyframes draw-check { to { stroke-dashoffset: 0; } }
+  .confetti {
+    position: fixed; top: -20px; width: 8px; height: 14px;
+    border-radius: 2px; z-index: 140; pointer-events: none; opacity: 0.95;
+    animation: confetti-fall linear forwards;
+  }
+  @keyframes confetti-fall { to { transform: translateY(110vh) rotate(720deg); opacity: 0.85; } }
+
+  #nav {
+    position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 20px; background: rgba(6,6,6,0.94);
+    backdrop-filter: blur(14px); border-top: 1px solid rgba(255,255,255,0.05); z-index: 150;
+  }
+  .nav-btn { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1); color: #bbb; padding: 11px 24px; border-radius: 30px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.15s; }
+  .nav-btn:active { transform: scale(0.95); }
+  .nav-btn:disabled { opacity: 0.15; pointer-events: none; }
+  .nav-btn.primary { background: linear-gradient(135deg, #0044cc, #0088ff); border: none; color: #fff; box-shadow: 0 4px 18px rgba(0,80,200,0.35); }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div id="topbar">
+  <button id="orig-btn" onclick="playOriginal()">🎧 Original</button>
+  <button id="tts-btn" onclick="toggleTTS()" disabled style="opacity:.35">Choose voice</button>
+  <select id="voice-pick" disabled style="opacity:.35;background:#111;color:#888;border:1px solid #333;border-radius:20px;padding:8px 10px;font-size:12px">
+    <option value="">After original</option>
+  </select>
+  <button id="auto-btn" onclick="toggleAuto()">⏭ Auto: Off</button>
+</div>
+<audio id="orig-voice" preload="auto" src="demo-kitchen-voiceover.mp3"></audio>
+<div id="slide-counter"></div>
+
+<div id="countdown-wrap">
+  <div id="countdown-ring">
+    <svg id="countdown-svg" width="36" height="36" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="15" fill="none" stroke="#1a1a1a" stroke-width="3"/>
+      <circle id="countdown-circle" cx="18" cy="18" r="15"/>
+    </svg>
+    <div id="countdown-num">4</div>
+  </div>
+  <div id="countdown-label">Next slide</div>
+</div>
+
+<div id="slides-container">
+
+  <!-- 0: LAUNCH -->
+  <div class="slide t-launch is-active" data-index="0">
+    <div class="hero-logo">KEC Field Technology</div>
+    <div class="hero-title">MyTechPix<br>Quick Guide</div>
+    <div class="hero-sub">What to Capture · When to Capture It · How to Avoid QA Blocks</div>
+    <button class="start-btn" onclick="goTo(1)">▶ START</button>
+  </div>
+
+  <!-- 1: 3 RULES -->
+  <div class="slide t-dark" data-index="1">
+    <div class="slide-tag">Section 1 · The Foundation</div>
+    <div class="slide-title">The Only 3 Things That Matter</div>
+    <div class="rule-block blue"><div class="rule-num">1</div><p><strong>Blue before you clean.</strong> Document everything BEFORE you touch it.</p></div>
+    <div class="rule-block green"><div class="rule-num">2</div><p><strong>Green after you finish.</strong> Document everything AFTER it is clean.</p></div>
+    <div class="rule-block red"><div class="rule-num">3</div><p><strong>Red only if there is a problem.</strong> Missing blue or green means you cannot check out.</p></div>
+  </div>
+
+  <!-- 2: JOB STATUS -->
+  <div class="slide t-blue" data-index="2">
+    <div class="slide-tag">Section 2 · Status Codes</div>
+    <div class="slide-title">Job Status — What They Mean</div>
+    <div class="status-item"><div class="sdot gray"></div><div><div class="s-label">On the Way.</div><div class="s-desc">Driving. No work. No photos.</div></div></div>
+    <div class="status-item"><div class="sdot yellow"></div><div><div class="s-label">Arrived Onsite.</div><div class="s-desc">You are there. Do not start yet.</div></div></div>
+    <div class="status-item"><div class="sdot red"></div><div><div class="s-label">Waiting on Access.</div><div class="s-desc">Cannot start. Use comments. Wide photo if blocked.</div></div></div>
+    <div class="status-item"><div class="sdot blue"></div><div><div class="s-label">Check In. Work Starts Here.</div><div class="s-desc">Take BLUE docs. Call office.</div></div></div>
+    <div class="status-item"><div class="sdot green"></div><div><div class="s-label">Check Out. Work Ends Here.</div><div class="s-desc">Cleaning done. GREEN docs. Metadata complete. Check out with the control tower BEFORE locking the location and setting the alarm.</div></div></div>
+    <div class="status-item"><div class="sdot gray"></div><div><div class="s-label">Needs SM Review.</div><div class="s-desc">After checkout, finish getting ready to leave the jobsite, then change status from Check Out to Needs SM Review. QA takes over.</div></div></div>
+  </div>
+
+  <!-- 3: BLUE KITCHEN -->
+  <div class="slide t-blue" data-index="3">
+    <div class="slide-tag">Section 3 · Before Cleaning</div>
+    <div class="slide-title">Blue — Kitchen and Hood</div>
+    <div class="badge blue">Before Cleaning</div>
+    <ul class="slide-list">
+      <li>Hood walkthrough video.</li>
+      <li>Pilot lights video. Flames must be visible.</li>
+      <li>Fire pull station tag. Front and back.</li>
+      <li>Wide view of appliances under hood.</li>
+      <li>Slow appliance line video. Left to right, about 5 feet back.</li>
+      <li>Hood with filters IN.</li>
+      <li>Hood with filters OUT.</li>
+      <li>Upper and lower tracks.</li>
+      <li>Plenum and detection line. Wide shot.</li>
+      <li>Backsplash and behind appliances.</li>
+      <li>Work area and return vents.</li>
+      <li>All duct collars.</li>
+    </ul>
+  </div>
+
+  <!-- 4: BLUE DUCT -->
+  <div class="slide t-blue" data-index="4">
+    <div class="slide-tag">Section 3 · Before Cleaning</div>
+    <div class="slide-title">Blue — Duct and Access Panels</div>
+    <div class="badge blue">Before Cleaning</div>
+    <ul class="slide-list">
+      <li>Overall duct view.</li>
+      <li>Location of each panel.</li>
+      <li>Panel ON. Sticker must be visible.</li>
+      <li>Panel OFF. Outside the hole.</li>
+      <li>View toward hood.</li>
+      <li>View toward vertical duct.</li>
+      <li>Fire wrap condition.</li>
+    </ul>
+    <div class="info-box red" style="margin-top:14px;">
+      <p><strong>No panel exists?</strong> Mark N/A Not Present. Never leave blank. Never guess. This is the most audited item.</p>
+    </div>
+  </div>
+
+  <!-- 5: BLUE ROOFTOP -->
+  <div class="slide t-blue" data-index="5">
+    <div class="slide-tag">Section 3 · Before Cleaning</div>
+    <div class="slide-title">Blue — Rooftop and Fan</div>
+    <div class="badge blue">Before Cleaning</div>
+    <ul class="slide-list">
+      <li>Fan and switch position.</li>
+      <li>Fan blades. All sides. Fan off.</li>
+      <li>Fan running video.</li>
+      <li>Fan bowl and reservoir.</li>
+      <li>Catch pan video.</li>
+      <li>Drain path. Within about 5 feet.</li>
+      <li>Vertical duct down.</li>
+      <li>Wide roof area.</li>
+      <li>360 degree fan video.</li>
+    </ul>
+  </div>
+
+  <!-- 6: GREEN -->
+  <div class="slide t-green" data-index="6">
+    <div class="slide-tag">Section 4 · After Cleaning</div>
+    <div class="slide-title">Green — Same Areas. Clean Condition.</div>
+    <div class="badge green">After Cleaning</div>
+    <div class="rule-block green" style="margin-top:10px;"><p style="font-size:15px;">Everything you shot in Blue must be verified in Green.</p></div>
+    <div class="info-box green" style="margin-top:14px;"><p style="font-size:16px;font-style:italic;">If QA cannot see it clean, it does not count.</p></div>
+  </div>
+
+  <!-- 7: VIDEO TECHNIQUE -->
+  <div class="slide t-neutral" data-index="7">
+    <div class="slide-tag">Section 5 · Technique</div>
+    <div class="slide-title">How to Shoot Video</div>
+    <div style="font-size:11px;color:#444;margin-bottom:14px;text-align:center;letter-spacing:1px;text-transform:uppercase;">Prevents 80 percent of QA fails</div>
+    <ul class="slide-list">
+      <li>Stand far enough back to see the whole area.</li>
+      <li>Move slow and steady.</li>
+      <li>One continuous shot. Do not stop and restart.</li>
+      <li>Pause 2 to 3 seconds on important areas.</li>
+    </ul>
+    <div class="dont-box">
+      <div class="dont-label">NEVER DO THIS</div>
+      <p>Do not zoom in. Do not jump between sections. Do not shoot too close. If you cannot see the full component, you are too close.</p>
+    </div>
+  </div>
+
+  <!-- 8: PRO TIP — GREASE REMOVAL -->
+  <div class="slide t-warn" data-index="8">
+    <div class="slide-tag">Section 5 · Pro Tip</div>
+    <div class="slide-title">Grease Removal. Key Fact.</div>
+    <div class="badge warn">Important</div>
+    <div class="verify-box">
+      <p>Heavy grease buildup breaks down with <strong>hot water and degreaser</strong>. Cold water makes grease solidify and re-adhere to surfaces, making your job harder. Apply degreaser, let it dwell, then rinse with hot water from the top down.</p>
+    </div>
+  </div>
+
+  <!-- 9: RED -->
+  <div class="slide t-red" data-index="9">
+    <div class="slide-tag">Section 6 · Deficiencies</div>
+    <div class="slide-title">Red — When to Use It</div>
+    <div class="badge red">Problems Only</div>
+    <ul class="slide-list" style="margin-top:10px;">
+      <li>You could not reach something.</li>
+      <li>Something is damaged.</li>
+      <li>Something is missing.</li>
+      <li>Fire wrap looks compromised.</li>
+      <li>Access is blocked.</li>
+    </ul>
+    <div class="rule-block red" style="margin-top:14px;"><p>Red must match one real issue. Red must be clear. Red is not a failure. Hiding it is.</p></div>
+  </div>
+
+  <!-- 10: METADATA -->
+  <div class="slide t-dark" data-index="10">
+    <div class="slide-tag">Section 8 · Checkout</div>
+    <div class="slide-title">Metadata Required to Check Out</div>
+    <div style="font-size:13px;color:#555;margin-bottom:14px;text-align:center;">Confirm all before checkout</div>
+    <div class="check-list">
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>System type.</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Duct orientation.</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Fan type.</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Stories.</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Access panel status.</span></div>
+    </div>
+    <div style="margin-top:14px;font-size:13px;color:#cc2222;text-align:center;font-weight:700;">Missing metadata means blocked checkout. No exceptions.</div>
+  </div>
+
+  <!-- 11: ACCESS PANEL RULE -->
+  <div class="slide t-warn" data-index="11">
+    <div class="slide-tag">Section 8 · Critical Reminder</div>
+    <div class="slide-title">Access Panel Rule.</div>
+    <div class="badge warn">Reminder</div>
+    <div class="verify-box">
+      <p>If a panel does not exist at the site, mark it <strong>N/A – Not Present</strong>. Never leave the field blank. Never guess. A blank or guessed entry is an automatic QA flag. This is the most audited item on the job.</p>
+    </div>
+  </div>
+
+  <!-- 12: QA BLOCKS -->
+  <div class="slide t-dark" data-index="12">
+    <div class="slide-tag">Section 9 · Watch Out</div>
+    <div class="slide-title">Common QA Blocks</div>
+    <div style="font-size:11px;color:#444;text-align:center;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase;">Avoid these every job</div>
+    <ul class="slide-list">
+      <li>Missing pilot lights video.</li>
+      <li>Filters out plenum not shown.</li>
+      <li>Appliance video too close.</li>
+      <li>Panel not shown or marked N/A.</li>
+      <li>Red issue uploaded with no explanation.</li>
+      <li>Photos in wrong bucket. Before or after.</li>
+    </ul>
+  </div>
+
+  <!-- 13: SELF CHECK -->
+  <div class="slide t-blue" data-index="13">
+    <div class="slide-tag">Section 11 · Before You Leave</div>
+    <div class="slide-title">Quick Self Check Before Checkout</div>
+    <div class="check-list">
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I shoot Blue before cleaning?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I verify every Blue area in Green?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I mark access limits clearly?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I complete all metadata?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I use Red only where needed?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I check out with the control tower BEFORE locking the location and setting the alarm?</span></div>
+      <div class="check-item"><div class="check-box" onclick="toggleCheck(this)"></div><span>Did I change status from Check Out to Needs SM Review before leaving?</span></div>
+    </div>
+    <div style="margin-top:16px;font-size:14px;color:#22bb55;text-align:center;font-weight:700;">All yes means you are done and checkout will pass.</div>
+  </div>
+
+  <!-- 14: FINAL -->
+  <div class="slide t-neutral" data-index="14">
+    <div class="slide-tag">The Standard</div>
+    <div class="hero-title" style="font-size:34px;margin-bottom:8px;">The Final Rule</div>
+    <div class="quote-box">
+      <p>If QA can recreate the job using your photos and videos, you did it right. That is the standard.</p>
+    </div>
+    <div style="margin-top:32px;font-size:10px;color:#222;text-align:center;letter-spacing:2px;text-transform:uppercase;">KEC Field Technology · MyTechPix Guide</div>
+  </div>
+
+  <!-- 15: QUIZ Q1 -->
+  <div class="slide t-dark" data-index="15" data-quiz="0">
+    <div class="slide-tag">Quiz · Question 1 of 5</div>
+    <div class="slide-title">A photo outlined in RED means what?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="answerQuiz(this)">The job is complete and ready to publish.</button>
+      <button class="quiz-option" data-correct="1" onclick="answerQuiz(this)">There is a deficiency that must be documented against a checklist item.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">It is a before-cleaning photo.</button>
+    </div>
+    <div class="quiz-feedback"></div>
+  </div>
+
+  <!-- 16: QUIZ Q2 -->
+  <div class="slide t-dark" data-index="16" data-quiz="1">
+    <div class="slide-tag">Quiz · Question 2 of 5</div>
+    <div class="slide-title">What works best on heavy grease buildup?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="answerQuiz(this)">Cold water only. It keeps grease from spreading.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">Dry wiping. Water makes it worse.</button>
+      <button class="quiz-option" data-correct="1" onclick="answerQuiz(this)">Degreaser with dwell time, then a hot water rinse from the top down.</button>
+    </div>
+    <div class="quiz-feedback"></div>
+  </div>
+
+  <!-- 17: QUIZ Q3 -->
+  <div class="slide t-dark" data-index="17" data-quiz="2">
+    <div class="slide-tag">Quiz · Question 3 of 5</div>
+    <div class="slide-title">There is no Access Panel 3 at the site. What do you do?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" data-correct="1" onclick="answerQuiz(this)">Mark it N/A – Not Present.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">Leave the field blank and let QA sort it out.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">Take your best guess. Something is better than nothing.</button>
+    </div>
+    <div class="quiz-feedback"></div>
+  </div>
+
+  <!-- 18: QUIZ Q4 -->
+  <div class="slide t-dark" data-index="18" data-quiz="3">
+    <div class="slide-tag">Quiz · Question 4 of 5</div>
+    <div class="slide-title">When are you DONE at checkout?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="answerQuiz(this)">After locking the location. Call the control tower later from the truck.</button>
+      <button class="quiz-option" data-correct="1" onclick="answerQuiz(this)">After checking out with the control tower, BEFORE locking the location and setting the alarm.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">Once the alarm is set. No call needed.</button>
+    </div>
+    <div class="quiz-feedback"></div>
+  </div>
+
+  <!-- 19: QUIZ Q5 -->
+  <div class="slide t-dark" data-index="19" data-quiz="4">
+    <div class="slide-tag">Quiz · Question 5 of 5</div>
+    <div class="slide-title">After checking out, what status do you set before leaving the jobsite?</div>
+    <div class="quiz-options">
+      <button class="quiz-option" onclick="answerQuiz(this)">On the Way.</button>
+      <button class="quiz-option" onclick="answerQuiz(this)">Waiting on Access.</button>
+      <button class="quiz-option" data-correct="1" onclick="answerQuiz(this)">Needs SM Review. Changed from Check Out once you are ready to leave.</button>
+    </div>
+    <div class="quiz-feedback"></div>
+  </div>
+
+  <!-- 20: QUIZ RESULTS -->
+  <div class="slide t-launch" data-index="20" id="results-slide">
+    <div class="slide-tag">Quiz · Results</div>
+    <div id="results-content"></div>
+  </div>
+
+</div>
+
+<div id="nav">
+  <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>← Back</button>
+  <button class="nav-btn primary" id="next-btn" onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+const TOTAL = 21;
+const QUIZ_COUNT = 5, PASS_SCORE = 4, FIRST_QUIZ_INDEX = 15, RESULTS_INDEX = 20;
+const QUIZ_TOPICS = [
+  'Red outline = deficiency tied to a checklist item',
+  'Grease removal: degreaser + hot water rinse',
+  'Access panels: mark N/A – Not Present, never blank, never guess',
+  'Checkout order: control tower BEFORE locking up and setting the alarm',
+  'Final status before leaving: Needs SM Review'
+];
+let quizState = new Array(QUIZ_COUNT);
+let cur = 0, ttsOn = false, autoOn = false, isAnimating = false;
+let countdownInterval = null, slideWordSpans = [];
+let voiceCache = null, voiceReady = false;
+
+// ── WORD WRAPPING ──────────────────────────────────────────────
+function wrapWords(el) {
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode(node) {
+      const p = node.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      const tag = p.tagName;
+      if (['SCRIPT','STYLE','BUTTON'].includes(tag)) return NodeFilter.FILTER_REJECT;
+      if (p.classList.contains('slide-tag') || p.classList.contains('hero-logo') || p.classList.contains('dont-label') || p.classList.contains('countdown-label')) return NodeFilter.FILTER_REJECT;
+      return node.textContent.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP;
+    }
+  });
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    const parts = node.textContent.split(/(\s+)/);
+    const frag = document.createDocumentFragment();
+    parts.forEach(part => {
+      if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); }
+      else if (part) { const s = document.createElement('span'); s.className = 'w'; s.textContent = part; frag.appendChild(s); }
+    });
+    node.parentNode.replaceChild(frag, node);
+  });
+}
+
+function initAllSlides() {
+  document.querySelectorAll('.slide').forEach(s => { if (!s.dataset.wrapped) { wrapWords(s); s.dataset.wrapped = '1'; } });
+}
+
+function getActiveWordSpans() {
+  const a = document.querySelector('.slide.is-active');
+  return a ? Array.from(a.querySelectorAll('.w')) : [];
+}
+
+function clearHighlights() { document.querySelectorAll('.w.lit').forEach(w => w.classList.remove('lit')); }
+
+// ── BUILD TTS TEXT WITH PAUSES ─────────────────────────────────
+// Groups spans by block parent, adds period between blocks for natural pauses
+function buildTTSText(spans) {
+  if (!spans.length) return '';
+  let result = '';
+  let lastBlock = null;
+  const BLOCK_TAGS = ['LI','P','DIV','H1','H2','H3','SPAN'];
+
+  spans.forEach(span => {
+    // Find nearest block ancestor
+    let block = span.parentElement;
+    while (block && block.className !== 'slide') {
+      if (['LI','P'].includes(block.tagName)) break;
+      block = block.parentElement;
+    }
+
+    if (lastBlock && block !== lastBlock) {
+      // Crossing a block boundary — add period if not already punctuated
+      if (result && !/[.!?,]$/.test(result.trimEnd())) {
+        result = result.trimEnd() + '. ';
+      } else {
+        result = result.trimEnd() + ' ';
+      }
+    } else if (result) {
+      result += ' ';
+    }
+
+    result += span.textContent;
+    lastBlock = block;
+  });
+
+  return result.trim();
+}
+
+// ── VOICE LOADER — iOS + Android ──────────────────────────────
+const PREFERRED_VOICES = [
+  'Evan','Nathan','Samantha','Alex','Karen','Moira',
+  'Daniel','Google US English','Google UK English Female',
+  'Microsoft Zira'
+];
+
+function pickBestVoice(list) {
+  for (let n of PREFERRED_VOICES) {
+    const v = list.find(v => v.name.includes(n));
+    if (v) return v;
+  }
+  return list.find(v => v.lang && v.lang.startsWith('en')) || list[0] || null;
+}
+
+function primeVoices() {
+  // Called on first user interaction — iOS requires a user gesture to load voices
+  if (voiceReady) return;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0; u.rate = 10;
+    window.speechSynthesis.speak(u);
+    window.speechSynthesis.cancel();
+  } catch(e) {}
+
+  const tryLoad = (attempts) => {
+    const list = window.speechSynthesis.getVoices();
+    if (list.length > 0) {
+      voiceCache = pickBestVoice(list);
+      voiceReady = true;
+    } else if (attempts < 20) {
+      setTimeout(() => tryLoad(attempts + 1), 150);
+    }
+  };
+
+  window.speechSynthesis.onvoiceschanged = () => {
+    const list = window.speechSynthesis.getVoices();
+    if (list.length > 0) { voiceCache = pickBestVoice(list); voiceReady = true; }
+  };
+
+  tryLoad(0);
+}
+
+// ── TTS ────────────────────────────────────────────────────────
+function readSlide() {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  clearCountdown();
+  clearHighlights();
+
+  slideWordSpans = getActiveWordSpans();
+  const text = buildTTSText(slideWordSpans);
+  if (!text) return;
+
+  // Re-check voices one more time before speaking
+  if (!voiceCache) {
+    const list = window.speechSynthesis.getVoices();
+    if (list.length > 0) voiceCache = pickBestVoice(list);
+  }
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.88; u.pitch = 1.0; u.volume = 1.0;
+  if (voiceCache) u.voice = voiceCache;
+
+  // Word highlight — count words in spoken text up to charIndex
+  // Extra periods don't break count since they attach to words
+  u.onboundary = (e) => {
+    if (e.name !== 'word') return;
+    clearHighlights();
+    const chunk = text.slice(0, e.charIndex + Math.max(e.charLength || 1, 1)).trim();
+    // Count non-empty tokens to get word index
+    const tokens = chunk.split(/\s+/).filter(t => t.length > 0);
+    // Map token index to span index — tokens may have added periods, spans don't
+    // Count only tokens that correspond to actual span words
+    let spanIdx = 0, tokenCount = 0;
+    for (let i = 0; i < tokens.length; i++) {
+      const clean = tokens[i].replace(/[.,!?]+$/, '');
+      if (spanIdx < slideWordSpans.length && slideWordSpans[spanIdx].textContent.replace(/[.,!?]+$/, '') === clean) {
+        if (i === tokens.length - 1) break;
+        spanIdx++;
+      }
+    }
+    // Simpler fallback: just use token count directly
+    const idx = Math.min(tokens.length - 1, slideWordSpans.length - 1);
+    const span = slideWordSpans[idx];
+    if (span) { span.classList.add('lit'); span.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  };
+
+  u.onend = () => {
+    document.getElementById('tts-btn').classList.remove('speaking');
+    clearHighlights();
+    if (autoOn && cur < TOTAL - 1) startCountdown();
+  };
+  u.onerror = () => { document.getElementById('tts-btn').classList.remove('speaking'); clearHighlights(); };
+
+  window.speechSynthesis.speak(u);
+  document.getElementById('tts-btn').classList.add('speaking');
+}
+
+
+let originalHeard = false;
+function unlockVoiceChoice(){
+  if(originalHeard) return;
+  originalHeard = true;
+  const tts = document.getElementById('tts-btn');
+  const pick = document.getElementById('voice-pick');
+  tts.disabled = false; tts.style.opacity = '1';
+  pick.disabled = false; pick.style.opacity = '1'; pick.style.color = '#ccc';
+  const list = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+  pick.innerHTML = '<option value="">Device voice</option>' + list.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
+  pick.onchange = () => {
+    const list2 = window.speechSynthesis.getVoices();
+    voiceCache = list2[+pick.value] || pickBestVoice(list2);
+    voiceReady = true;
+  };
+}
+function playOriginal(){
+  const a = document.getElementById('orig-voice');
+  const btn = document.getElementById('orig-btn');
+  if(!a) return;
+  if(!a.paused){ a.pause(); btn.textContent = '🎧 Original'; return; }
+  a.currentTime = 0;
+  a.play().then(()=>{ btn.textContent = '🔇 Original'; unlockVoiceChoice(); }).catch(()=>{});
+  a.onended = () => { btn.textContent = '🎧 Original'; unlockVoiceChoice(); };
+}
+
+function toggleTTS() {
+  if(!originalHeard){ playOriginal(); return; }
+  primeVoices(); // ensure voices loaded on user tap
+  ttsOn = !ttsOn;
+  const btn = document.getElementById('tts-btn');
+  if (ttsOn) { btn.textContent = '🔇 Stop'; readSlide(); }
+  else {
+    window.speechSynthesis.cancel();
+    btn.textContent = '🎧 Listen · ▶️ Play';
+    btn.classList.remove('speaking');
+    clearCountdown(); clearHighlights();
+  }
+}
+
+function toggleAuto() {
+  autoOn = !autoOn;
+  const btn = document.getElementById('auto-btn');
+  btn.textContent = autoOn ? '⏭ Auto: On' : '⏭ Auto: Off';
+  btn.classList.toggle('on', autoOn);
+  if (!autoOn) clearCountdown();
+}
+
+// ── COUNTDOWN ──────────────────────────────────────────────────
+const COUNTDOWN_SECS = 4, CIRC = 94;
+
+function startCountdown() {
+  clearCountdown();
+  if (cur >= TOTAL - 1) return;
+  if (isQuizLocked()) return;
+  const wrap = document.getElementById('countdown-wrap');
+  const circle = document.getElementById('countdown-circle');
+  const num = document.getElementById('countdown-num');
+  circle.style.strokeDasharray = CIRC; circle.style.strokeDashoffset = CIRC;
+  wrap.classList.add('visible'); num.textContent = COUNTDOWN_SECS;
+  let elapsed = 0;
+  countdownInterval = setInterval(() => {
+    elapsed += 50;
+    circle.style.strokeDashoffset = CIRC - (CIRC * elapsed / (COUNTDOWN_SECS * 1000));
+    const rem = Math.ceil(COUNTDOWN_SECS - elapsed / 1000);
+    num.textContent = rem > 0 ? rem : '';
+    if (elapsed >= COUNTDOWN_SECS * 1000) { clearCountdown(); nextSlide(); }
+  }, 50);
+}
+
+function clearCountdown() {
+  if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+  document.getElementById('countdown-wrap').classList.remove('visible');
+  const c = document.getElementById('countdown-circle'); if (c) c.style.strokeDashoffset = CIRC;
+  const n = document.getElementById('countdown-num'); if (n) n.textContent = COUNTDOWN_SECS;
+}
+
+// ── SLIDE TRANSITIONS ──────────────────────────────────────────
+const ANIM_MS = 400;
+
+function goTo(index) {
+  if (index < 0 || index >= TOTAL || index === cur || isAnimating) return;
+  primeVoices();
+  isAnimating = true;
+  clearCountdown(); clearHighlights(); window.speechSynthesis.cancel();
+  const fromEl = document.querySelector('.slide.is-active');
+  const toEl = document.querySelector(`.slide[data-index="${index}"]`);
+  if (!fromEl || !toEl) { isAnimating = false; return; }
+  if (index === RESULTS_INDEX) renderResults();
+  const dir = index > cur ? 'right' : 'left';
+  toEl.className = toEl.className.replace(/\b(is-active|enter-from-right|enter-from-left|exit-to-left|exit-to-right|animating)\b/g,'').trim();
+  toEl.classList.add(dir === 'right' ? 'enter-from-right' : 'enter-from-left');
+  void toEl.offsetWidth;
+  fromEl.classList.remove('is-active');
+  fromEl.classList.add(dir === 'right' ? 'exit-to-left' : 'exit-to-right');
+  requestAnimationFrame(() => requestAnimationFrame(() => { toEl.classList.add('animating'); fromEl.classList.add('animating'); }));
+  setTimeout(() => {
+    fromEl.classList.remove('exit-to-left','exit-to-right','animating'); fromEl.style.cssText = '';
+    toEl.classList.remove('enter-from-right','enter-from-left','animating'); toEl.classList.add('is-active');
+    cur = index; isAnimating = false; updateUI();
+    if (ttsOn) readSlide();
+  }, ANIM_MS);
+  cur = index; updateUI();
+}
+
+function nextSlide() { if (isQuizLocked()) return; goTo(cur + 1); }
+function prevSlide() { goTo(cur - 1); }
+function toggleCheck(el) { el.classList.toggle('checked'); }
+
+// ── QUIZ ───────────────────────────────────────────────────────
+function isQuizLocked() {
+  const active = document.querySelector(`.slide[data-index="${cur}"]`);
+  return !!(active && active.dataset.quiz !== undefined && quizState[+active.dataset.quiz] === undefined);
+}
+
+function answerQuiz(el) {
+  const slide = el.closest('.slide');
+  const qi = +slide.dataset.quiz;
+  if (quizState[qi] !== undefined) return;
+  const correct = el.dataset.correct === '1';
+  quizState[qi] = correct;
+  el.classList.add(correct ? 'correct' : 'wrong');
+  slide.querySelectorAll('.quiz-option').forEach(b => {
+    b.disabled = true;
+    if (b.dataset.correct === '1') b.classList.add('correct');
+  });
+  const fb = slide.querySelector('.quiz-feedback');
+  fb.textContent = correct ? '✓ Correct' : '✗ Not quite. The correct answer is highlighted in green.';
+  fb.className = 'quiz-feedback ' + (correct ? 'good' : 'bad');
+  updateUI();
+  if (autoOn && !window.speechSynthesis.speaking) startCountdown();
+}
+
+function renderResults() {
+  const el = document.getElementById('results-content');
+  const score = quizState.filter(v => v === true).length;
+  if (score >= PASS_SCORE) {
+    el.innerHTML =
+      '<svg id="pass-mark" viewBox="0 0 120 120">' +
+        '<circle cx="60" cy="60" r="48"/>' +
+        '<path d="M38 62 L54 78 L84 46"/>' +
+      '</svg>' +
+      '<div style="font-size:36px;font-weight:900;color:#22bb55;margin-bottom:6px;">PASSED</div>' +
+      '<div style="font-size:16px;color:#aaa;">Score: <strong style="color:#fff;">' + score + ' / ' + QUIZ_COUNT + '</strong></div>' +
+      '<div style="font-size:13px;color:#556a85;text-align:center;margin-top:14px;line-height:1.7;">You know the standard.<br>Check out with the control tower, then set Needs SM Review.</div>';
+    launchConfetti();
+  } else {
+    const missed = QUIZ_TOPICS.filter((t, i) => quizState[i] !== true);
+    el.innerHTML =
+      '<div style="font-size:36px;font-weight:900;color:#ffaa00;margin-bottom:6px;">NOT YET</div>' +
+      '<div style="font-size:16px;color:#aaa;margin-bottom:14px;">Score: <strong style="color:#fff;">' + score + ' / ' + QUIZ_COUNT + '</strong> · Need ' + PASS_SCORE + ' to pass</div>' +
+      '<div style="font-size:11px;color:#666;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;">Review these topics</div>' +
+      '<ul class="slide-list" style="max-width:420px;">' + missed.map(t => '<li>' + t + '</li>').join('') + '</ul>' +
+      '<button class="start-btn" style="margin-top:22px;font-size:15px;padding:14px 40px;" onclick="retryQuiz()">↻ Review &amp; Retry</button>';
+  }
+}
+
+function launchConfetti() {
+  const colors = ['#00cc66', '#0088ff', '#ffaa00', '#ff4477', '#77bbff'];
+  for (let i = 0; i < 40; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.animationDuration = (2 + Math.random() * 2) + 's';
+    c.style.animationDelay = (Math.random() * 0.8) + 's';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 5500);
+  }
+}
+
+function retryQuiz() {
+  quizState = new Array(QUIZ_COUNT);
+  document.querySelectorAll('.quiz-option').forEach(b => { b.disabled = false; b.classList.remove('correct', 'wrong'); });
+  document.querySelectorAll('.quiz-feedback').forEach(f => { f.textContent = ''; f.className = 'quiz-feedback'; });
+  goTo(FIRST_QUIZ_INDEX);
+}
+
+function updateUI() {
+  document.getElementById('progress-bar').style.width = (cur / (TOTAL - 1) * 100) + '%';
+  document.getElementById('slide-counter').textContent = cur === 0 ? '' : cur + ' / ' + (TOTAL - 1);
+  document.getElementById('prev-btn').disabled = cur === 0;
+  const nb = document.getElementById('next-btn');
+  nb.textContent = cur === TOTAL - 1 ? '✓ Done' : 'Next →';
+  nb.disabled = cur === TOTAL - 1 || isQuizLocked();
+}
+
+// ── SWIPE + KEYBOARD ───────────────────────────────────────────
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.addEventListener('touchend', e => {
+  if (isAnimating) return;
+  const diff = tx - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 45) diff > 0 ? nextSlide() : prevSlide();
+}, { passive: true });
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+});
+
+initAllSlides();
+updateUI();
+</script>
+</body>
+</html>
