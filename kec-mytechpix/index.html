@@ -197,9 +197,10 @@
 
 <div id="progress-bar"></div>
 <div id="topbar">
+  <button id="tts-btn" onclick="toggleTTS()">🎧 Listen · ▶️ Play</button>
+  <audio id="guide-voice" preload="auto" src="kec-mytechpix-voice.mp3"></audio>
   <button id="auto-btn" onclick="toggleAuto()">⏭ Auto: Off</button>
 </div>
-<audio id="orig-voice" preload="auto" src="demo-kitchen-voiceover.mp3"></audio>
 <div id="slide-counter"></div>
 
 <div id="countdown-wrap">
@@ -220,11 +221,6 @@
     <div class="hero-logo">KEC Field Technology</div>
     <div class="hero-title">MyTechPix<br>Quick Guide</div>
     <div class="hero-sub">What to Capture · When to Capture It · How to Avoid QA Blocks</div>
-    <button id="orig-btn" class="start-btn" style="margin-top:8px" onclick="playOriginal()">🎧 Listen · ▶️ Play</button>
-    <button id="tts-btn" class="start-btn" style="margin-top:10px;display:none;background:#1a1a1a;box-shadow:none" onclick="toggleTTS()">Choose voice</button>
-    <select id="voice-pick" style="display:none;margin-top:10px;background:#111;color:#ccc;border:1px solid #333;border-radius:20px;padding:10px 16px;font-size:14px">
-      <option value="">Device voice</option>
-    </select>
     <button class="start-btn" onclick="goTo(1)">▶ START</button>
   </div>
 
@@ -681,45 +677,24 @@ function readSlide() {
   document.getElementById('tts-btn').classList.add('speaking');
 }
 
-
-let originalHeard = false;
-function unlockVoiceChoice(){
-  if(originalHeard) return;
-  originalHeard = true;
-  const tts = document.getElementById('tts-btn');
-  const pick = document.getElementById('voice-pick');
-  tts.style.display = 'block'; tts.disabled = false; tts.style.opacity = '1';
-  pick.style.display = 'block'; pick.disabled = false; pick.style.opacity = '1'; pick.style.color = '#ccc';
-  const list = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
-  pick.innerHTML = '<option value="">Device voice</option>' + list.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
-  pick.onchange = () => {
-    const list2 = window.speechSynthesis.getVoices();
-    voiceCache = list2[+pick.value] || pickBestVoice(list2);
-    voiceReady = true;
-  };
-}
-function playOriginal(){
-  const a = document.getElementById('orig-voice');
-  const btn = document.getElementById('orig-btn');
-  if(!a) return;
-  if(!a.paused){ a.pause(); btn.textContent = '🎧 Listen · ▶️ Play'; return; }
-  a.currentTime = 0;
-  a.play().then(()=>{ btn.textContent = '🔇 Stop'; unlockVoiceChoice(); }).catch(()=>{});
-  a.onended = () => { btn.textContent = '🎧 Listen · ▶️ Play'; unlockVoiceChoice(); };
-}
-
 function toggleTTS() {
-  if(!originalHeard){ playOriginal(); return; }
-  primeVoices(); // ensure voices loaded on user tap
-  ttsOn = !ttsOn;
+  const voice = document.getElementById('guide-voice');
   const btn = document.getElementById('tts-btn');
-  if (ttsOn) { btn.textContent = '🔇 Stop'; readSlide(); }
-  else {
-    window.speechSynthesis.cancel();
-    btn.textContent = '🎧 Listen · ▶️ Play';
-    btn.classList.remove('speaking');
-    clearCountdown(); clearHighlights();
+  ttsOn = !ttsOn;
+  if (ttsOn && voice) {
+    window.speechSynthesis && window.speechSynthesis.cancel();
+    voice.currentTime = 0;
+    voice.play().catch(()=>{});
+    btn.textContent = '🔇 Stop';
+    btn.classList.add('speaking');
+    voice.onended = () => { ttsOn = false; btn.textContent = '🎧 Listen · ▶️ Play'; btn.classList.remove('speaking'); };
+    return;
   }
+  if (voice) voice.pause();
+  window.speechSynthesis && window.speechSynthesis.cancel();
+  btn.textContent = '🎧 Listen · ▶️ Play';
+  btn.classList.remove('speaking');
+  clearCountdown(); clearHighlights();
 }
 
 function toggleAuto() {
