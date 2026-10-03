@@ -197,11 +197,6 @@
 
 <div id="progress-bar"></div>
 <div id="topbar">
-  <button id="orig-btn" onclick="playOriginal()">🎧 Original</button>
-  <button id="tts-btn" onclick="toggleTTS()" disabled style="opacity:.35">Choose voice</button>
-  <select id="voice-pick" disabled style="opacity:.35;background:#111;color:#888;border:1px solid #333;border-radius:20px;padding:8px 10px;font-size:12px">
-    <option value="">After original</option>
-  </select>
   <button id="auto-btn" onclick="toggleAuto()">⏭ Auto: Off</button>
 </div>
 <audio id="orig-voice" preload="auto" src="demo-kitchen-voiceover.mp3"></audio>
@@ -225,6 +220,11 @@
     <div class="hero-logo">KEC Field Technology</div>
     <div class="hero-title">MyTechPix<br>Quick Guide</div>
     <div class="hero-sub">What to Capture · When to Capture It · How to Avoid QA Blocks</div>
+    <button id="orig-btn" class="start-btn" style="margin-top:8px" onclick="playOriginal()">🎧 Listen · ▶️ Play</button>
+    <button id="tts-btn" class="start-btn" style="margin-top:10px;display:none;background:#1a1a1a;box-shadow:none" onclick="toggleTTS()">Choose voice</button>
+    <select id="voice-pick" style="display:none;margin-top:10px;background:#111;color:#ccc;border:1px solid #333;border-radius:20px;padding:10px 16px;font-size:14px">
+      <option value="">Device voice</option>
+    </select>
     <button class="start-btn" onclick="goTo(1)">▶ START</button>
   </div>
 
@@ -688,8 +688,8 @@ function unlockVoiceChoice(){
   originalHeard = true;
   const tts = document.getElementById('tts-btn');
   const pick = document.getElementById('voice-pick');
-  tts.disabled = false; tts.style.opacity = '1';
-  pick.disabled = false; pick.style.opacity = '1'; pick.style.color = '#ccc';
+  tts.style.display = 'block'; tts.disabled = false; tts.style.opacity = '1';
+  pick.style.display = 'block'; pick.disabled = false; pick.style.opacity = '1'; pick.style.color = '#ccc';
   const list = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
   pick.innerHTML = '<option value="">Device voice</option>' + list.map((v,i)=>`<option value="${i}">${v.name}</option>`).join('');
   pick.onchange = () => {
@@ -702,10 +702,10 @@ function playOriginal(){
   const a = document.getElementById('orig-voice');
   const btn = document.getElementById('orig-btn');
   if(!a) return;
-  if(!a.paused){ a.pause(); btn.textContent = '🎧 Original'; return; }
+  if(!a.paused){ a.pause(); btn.textContent = '🎧 Listen · ▶️ Play'; return; }
   a.currentTime = 0;
-  a.play().then(()=>{ btn.textContent = '🔇 Original'; unlockVoiceChoice(); }).catch(()=>{});
-  a.onended = () => { btn.textContent = '🎧 Original'; unlockVoiceChoice(); };
+  a.play().then(()=>{ btn.textContent = '🔇 Stop'; unlockVoiceChoice(); }).catch(()=>{});
+  a.onended = () => { btn.textContent = '🎧 Listen · ▶️ Play'; unlockVoiceChoice(); };
 }
 
 function toggleTTS() {
