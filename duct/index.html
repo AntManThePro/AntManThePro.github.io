@@ -150,8 +150,12 @@
         <label>TechPix / photo packet</label>
         <input id="pix" placeholder="https://app.mytechpix.com/go/..."/>
         <div class="grid grid-cols-2 gap-2 mt-2 no-print">
-          <button class="act" type="button" id="btnAsset">Load Blind Salamander</button>
+          <button class="act" type="button" id="btnAddAsset">Add Asset</button>
+          <button class="ghost" type="button" id="btnAsset">Load Blind Salamander</button>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mt-2 no-print">
           <button class="ghost" type="button" id="btnAsset2">Add 2nd fan as new asset</button>
+          <button class="ghost" type="button" id="btnVoice">Replay demo walkthrough</button>
         </div>
         <div id="assetCard" class="text-[12px] text-[#9fe8c8] mt-2"></div>
       </section>
@@ -187,7 +191,7 @@
         </div>
         <div class="flex flex-wrap gap-1 mb-2 no-print" id="tools"></div>
         <div id="boardWrap">
-          <canvas id="board" width="1600" height="1100"></canvas>
+          <audio id="demoVoice" preload="none" src="demo-kitchen-voiceover.mp3"></audio>
           <div id="zoomBar" class="no-print">
             <button type="button" id="btnZoomOut" aria-label="Zoom out">−</button>
             <button type="button" id="btnZoomFit" aria-label="Reset view">FIT</button>
@@ -1384,6 +1388,81 @@ $('btnFanEnd').onclick = () => {
   draw(); audit();
 };
 
+function applId(label){
+  const s=label.toLowerCase();
+  if(/char|broil/.test(s)) return 'char';
+  if(/wok|ethnic/.test(s)) return 'wok';
+  if(/fry/.test(s)) return 'fryer';
+  if(/grill|griddle/.test(s)) return 'griddle';
+  if(/oven/.test(s)) return 'oven';
+  if(/solid|wood|pizza/.test(s)) return 'solid';
+  return 'range';
+}
+function addAssetFromCard(){
+  const line=($('lineName').value||$('name').value||'Hood line').trim();
+  const ref=($('hoodRef').value||'').trim();
+  const region=($('region').value||'').trim();
+  const account=($('acctType').value||'').trim();
+  const len=Math.max(4, +$('assetLen').value||8);
+  const collars=Math.max(1, +$('assetCollars').value||1);
+  const filters=+$('assetFilters').value||0;
+  const filterType=$('filterType').value||'';
+  const horiz=Math.max(2, +$('assetHoriz').value||8);
+  const panels=Math.max(0, +$('assetPanels').value||0);
+  const appls=($('applLine').value||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const fanType=$('fanType').value||'Upblast';
+  state=blank();
+  state.name=line;
+  state.addr=[region, account].filter(Boolean).join(' · ');
+  state.ahj=region||'';
+  state.fanType=fanType;
+  state.hoodCount=1;
+  state.fanCount=1;
+  state.notes=`Typed asset. ${len}' hood, ${collars} collar(s), ${filters} baffles. L→R: ${appls.join(', ')||'none listed'}. Common horiz ${horiz}' with ${panels} panel(s). Ends at ${fanType}.`;
+  const h={id:uid(),type:'hood',x:280,y:500,label:line,hoodStyle:'wall',wFt:len,dFt:4,banks:1};
+  const nodes=[h], edges=[];
+  for(let i=0;i<collars;i++){
+    const cx=180+((i+0.5)/collars)*200;
+    const c={id:uid(),type:'collar',x:cx,y:410,label:'Collar '+(i+1),size:''};
+    nodes.push(c);
+    edges.push({id:uid(),from:h.id,to:c.id,lengthFt:2,axis:'V',kind:'collar'});
+  }
+  const rise={id:uid(),type:'elbow',x:280,y:300,label:'Rise'};
+  const turn={id:uid(),type:'elbow',x:280+Math.min(220,horiz*8),y:300,label:'To fan'};
+  const fan={id:uid(),type:'fan',x:turn.x+80,y:190,label:fanType};
+  nodes.push(rise,turn,fan);
+  const first=nodes.find(n=>n.type==='collar')||h;
+  edges.push({id:uid(),from:first.id,to:rise.id,lengthFt:10,axis:'V',kind:'V'});
+  edges.push({id:uid(),from:rise.id,to:turn.id,lengthFt:horiz,axis:'H',kind:'H',panels});
+  edges.push({id:uid(),from:turn.id,to:fan.id,lengthFt:12,axis:'V',kind:'U90'});
+  for(let k=0;k<panels;k++){
+    const t=(k+1)/(panels+1);
+    nodes.push({id:uid(),type:'panel',x:Math.round(rise.x+(turn.x-rise.x)*t),y:300,label:'AP-'+(k+1)});
+  }
+  appls.forEach((label,i)=>{
+    const id=applId(label);
+    const spec=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
+    nodes.push({id:uid(),type:'appl',x:140+i*72,y:580,label,appl:id,wFt:spec.wFt,dFt:2.4,parentHood:h.id});
+  });
+  state.nodes=nodes;
+  state.edges=edges;
+  state.asset={line,ref,region,account,len,collars,filters,filterType,horiz,panels,appl:appls,fan:fanType,revenue:$('revenue').value,freq:$('freq').value,techs:$('techs').value,hours:$('hours').value,pix:$('pix').value};
+  $('assetCard').innerHTML=`<b class="ok">${line}</b> drawn from the card · ${ref||'no ref'} · ${region||'no region'}<br>${len}' hood · ${collars} collars · ${filters} baffles · ${horiz}' horiz · ${panels} panels · ${fanType}`;
+  stateToForm();
+  $('lineName').value=line; $('hoodRef').value=ref; $('region').value=region; $('acctType').value=account;
+  $('assetLen').value=len; $('assetCollars').value=collars; $('assetFilters').value=filters; $('filterType').value=filterType;
+  $('assetHoriz').value=horiz; $('assetPanels').value=panels; $('applLine').value=appls.join(', ');
+  selected=null; lastId=fan.id; draw(); audit(); renderLib();
+  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function playDemoVoice(){
+  const a=$('demoVoice');
+  if(!a) return;
+  a.currentTime=0;
+  a.play().catch(()=>{});
+}
+$('btnAddAsset').onclick = addAssetFromCard;
+$('btnVoice').onclick = playDemoVoice;
 $('btnAsset').onclick = () => loadAsset('blind');
 $('btnAsset2').onclick = () => loadAsset('second');
 
@@ -1427,6 +1506,7 @@ $('btnDemo').onclick = () => {
     {id:uid(),from:e2.id,to:f.id,lengthFt:6,axis:'H'}
   ];
   stateToForm(); lastId=f.id; selected=null; draw(); audit(); renderLib();
+  playDemoVoice();
 };
 
 tools();
