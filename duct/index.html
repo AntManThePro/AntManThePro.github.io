@@ -128,7 +128,7 @@
           <div class="text-xs tracking-widest text-cyan-300">ASSET = ONE EXHAUST SYSTEM</div>
           <span class="chip">1 FAN PATH</span>
         </div>
-        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">Two fans to two hoods = two assets. Do not smash them into one drawing.</p>
+        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">One fan path = one asset, even with several hoods on it. A second fan is a second asset.</p>
         <div class="grid sm:grid-cols-2 gap-2">
           <div><label>Line name</label><input id="lineName" placeholder="Blind Salamander"/></div>
           <div><label>Client hood ref</label><input id="hoodRef" placeholder="KEC - Main Line"/></div>
@@ -165,13 +165,16 @@
           <div class="text-xs tracking-widest text-cyan-300">DESCRIBE THE RUN — WORDS DRAW THE MAP</div>
           <span class="chip">TYPE IT</span>
         </div>
-        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">Write the path like you'd say it on the roof. The parser builds hood, collars, measured pieces, panels, and the fan — same as Load demo kitchen, but from your words.</p>
-        <textarea id="descInput" rows="4" placeholder="Example: 12 ft wall canopy with 2 collars, fryer and char under it. 4 ft vertical off collar, 45 away, 3 ft slant, 45 into horizontal, 20 ft horizontal with 3 access panels, 90 up 12 ft to an upblast fan."></textarea>
+        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">One fan path is one asset, even with several hoods on it. Side-by-side, island front-and-back, four to eight hoods — same drawing until a second fan splits the duct. Say it like the roof.</p>
+        <textarea id="descInput" rows="5" placeholder="Main line hood 10 ft, back line hood 8 ft, 40 ft apart. Joining horizontal 100 ft, vertical two stories, horizontal 10 ft, vertical one story to the upblast fan."></textarea>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 no-print">
           <button class="act" type="button" id="btnDescribe">Draw from words</button>
           <button class="ghost" type="button" id="btnDescClear">Clear</button>
           <button class="ghost" type="button" id="btnDescDemo1">Sample: Blind Salamander</button>
           <button class="ghost" type="button" id="btnDescDemo2">Sample: collar → fan</button>
+        </div>
+        <div class="grid grid-cols-1 gap-2 mt-2 no-print">
+          <button class="ghost" type="button" id="btnDescDemo3">Sample: multi-hood, one fan</button>
         </div>
         <div id="descOut" class="text-[12px] text-[#9fe8c8] mt-2"></div>
       </section>
@@ -582,7 +585,7 @@ function neighbors(id){ const s=new Set(); state.edges.forEach(e=>{ if(e.from===
 
 function audit(){
   formToState(); const flags=[];
-  const panels=state.nodes.filter(n=>n.type==='panel'), hoods=state.nodes.filter(n=>n.type==='hood'), fans=state.nodes.filter(n=>n.type==='fan'), elbows=state.nodes.filter(n=>n.type==='elbow'), collars=state.nodes.filter(n=>n.type==='collar'), appls=state.nodes.filter(n=>n.type==='appl);
+  const panels=state.nodes.filter(n=>n.type==='panel'), hoods=state.nodes.filter(n=>n.type==='hood'), fans=state.nodes.filter(n=>n.type==='fan'), elbows=state.nodes.filter(n=>n.type==='elbow'), collars=state.nodes.filter(n=>n.type==='collar'), appls=state.nodes.filter(n=>n.type==='appl');
   if(state.packet==='missing') flags.push({lvl:'fail',code:'§4.6.4',text:'No exhaust drawing on the premises. Owner duty. Produce this field as-built and leave a copy in the hood binder.'});
   else if(state.packet==='stale'||state.packet==='permit') flags.push({lvl:'warn',code:'§4.6.4',text:'Packet exists but is not a live as-built. Treat permit sets as suspect until field-verified.'});
   else flags.push({lvl:'pass',code:'§4.6.4',text:'On-premises packet reported present. Still verify it matches the metal you can see.'});
@@ -760,61 +763,209 @@ function addAssetFromCard(){
 }
 
 /* ---------- DESCRIBE-THE-RUN parser ---------- */
-const DESC_PIECE_RE = [
-  {re:/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:vertical|vert|rise)\b/gi, kind:'V'},
-  {re:/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:horizontal|horiz|sideways)\b/gi, kind:'H'},
-  {re:/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:slant|45)\b/gi, kind:'S45'},
-  {re:/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:90|up\s+to\s+fan|riser)\b/gi, kind:'U90'}
-];
-const DESC_PANEL_RE = /\b(\d+)\s*(?:access\s*)?panels?\b/gi;
-const DESC_COLLAR_RE = /\b(\d+)\s*collars?\b/gi;
-const DESC_FILTER_RE = /\b(\d+)\s*(?:baffle\s*)?filters?\b/gi;
-const DESC_HOOD_RE = /\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:hood|canopy|wall)\b/gi;
-const DESC_HORIZ_RE = /\b(?:common\s*)?(?:horiz(?:ontal)?)\s*(?:duct)?\s*(?:of\s*)?(\d+(?:\.\d+)?)\s*(?:ft|feet|')\b/gi;
-const DESC_FAN_RE = /\b(upblast(?:\s+hinged)?|industrial|in-?line|pcu|self-?contained)\b/gi;
-const DESC_APPL_WORDS = ['fryer','charbroiler','char','griddle','flat grill','range','stove top','wok','oven','salamander','tilt skillet','kettle','steamer','solid fuel','pizza'];
-
+function descNum(raw){
+  if(raw==null) return null;
+  const s=String(raw).toLowerCase().replace(/-/g,' ').trim();
+  if(/^\d+(?:\.\d+)?$/.test(s)) return +s;
+  const ones={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90,hundred:100};
+  if(ones[s]!=null) return ones[s];
+  const parts=s.split(/\s+/);
+  if(parts.length===2 && ones[parts[0]] && ones[parts[1]] && ones[parts[0]]>=20 && ones[parts[1]]<10) return ones[parts[0]]+ones[parts[1]];
+  return null;
+}
+function normalizeDesc(text){
+  let t=(' '+(text||'').toLowerCase()+' ').replace(/[–—]/g,' ');
+  t=t.replace(/\ba hundred\b/g,' 100 ').replace(/\bhundred\b/g,' 100 ');
+  t=t.replace(/\btwenty[\s-]?four\b/g,' 24 ').replace(/\bforty\b/g,' 40 ').replace(/\btwelve\b/g,' 12 ').replace(/\btwenty\b/g,' 20 ').replace(/\bthirty\b/g,' 30 ');
+  t=t.replace(/\b(one|two|three|four|five|six|seven|eight)\s+stor(?:y|ies)\b/g,(m,w)=>' '+(descNum(w)*12)+' ft vertical ');
+  t=t.replace(/\b(\d+)\s+stor(?:y|ies)\b/g,(m,n)=>' '+(+n*12)+' ft vertical ');
+  t=t.replace(/\bone more story\b/g,' 12 ft vertical ');
+  return t.replace(/\s+/g,' ').trim();
+}
 function parseDescribe(text){
-  const t = (text||'').toLowerCase();
-  const out = {hoodFt:null, collars:null, filters:null, horiz:null, panels:0, fan:'Upblast', pieces:[], appls:[], warnings:[]}; let m;
-  DESC_HOOD_RE.lastIndex=0; if((m=DESC_HOOD_RE.exec(t))) out.hoodFt=+m[1];
-  DESC_COLLAR_RE.lastIndex=0; if((m=DESC_COLLAR_RE.exec(t))) out.collars=+m[1];
-  DESC_FILTER_RE.lastIndex=0; if((m=DESC_FILTER_RE.exec(t))) out.filters=+m[1];
-  DESC_HORIZ_RE.lastIndex=0; if((m=DESC_HORIZ_RE.exec(t))) out.horiz=+m[1];
-  DESC_FAN_RE.lastIndex=0; if((m=DESC_FAN_RE.exec(t))) out.fan=m[1].replace(/\b\w/g,c=>c.toUpperCase());
-  DESC_PANEL_RE.lastIndex=0; while((m=DESC_PANEL_RE.exec(t))) out.panels+=+m[1];
-  DESC_PIECE_RE.forEach(p=>{
-    p.re.lastIndex=0;
-    while((m=p.re.exec(t))){
-      const ft=+m[1]; const label=p.kind==='V'?'vertical':p.kind==='H'?'horizontal':p.kind==='S45'?'45 slant':'90 up';
-      if(!out.pieces.some(x=>x.kind===p.kind && Math.abs(x.ft-ft)<1e-9)) out.pieces.push({kind:p.kind,ft:ft,panels:0,label:ft+' ft '+label});
+  const raw=(text||'');
+  const t=normalizeDesc(raw);
+  const out={hoods:[], gapFt:null, collars:null, filters:null, panels:0, fan:'Upblast', pieces:[], appls:[], warnings:[], storiesAssumed:false};
+  let m;
+  const fanRe=/\b(upblast(?:\s+hinged)?|industrial|in-?line|pcu|self-?contained)\b/i;
+  if((m=fanRe.exec(t))) out.fan=m[1].replace(/\b\w/g,c=>c.toUpperCase());
+  const colRe=/\b(\d+)\s*collars?\b/gi;
+  if((m=colRe.exec(t))) out.collars=+m[1];
+  const filRe=/\b(\d+)\s*(?:baffle\s*)?filters?\b/gi;
+  if((m=filRe.exec(t))) out.filters=+m[1];
+  const panRe=/\b(\d+)\s*(?:access\s*)?panels?\b/gi;
+  while((m=panRe.exec(t))) out.panels+=+m[1];
+  const gapRe=/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*apart\b/;
+  if((m=gapRe.exec(t))) out.gapFt=+m[1];
+  const named=[
+    /\b(main(?:\s+line)?|back(?:\s+line)?|island(?:\s+canopy)?|front(?:\s+line)?|rear(?:\s+line)?)\s+(?:hood|canopy|line)?\s*(\d+(?:\.\d+)?)\s*(?:ft|feet|')/gi,
+    /\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(main(?:\s+line)?|back(?:\s+line)?|island(?:\s+canopy)?|front(?:\s+line)?|rear(?:\s+line)?)\s*(?:hood|canopy)?/gi
+  ];
+  const seen=new Set();
+  named.forEach(re=>{
+    re.lastIndex=0;
+    while((m=re.exec(t))){
+      const a=m[1], b=m[2];
+      const name=/^\d/.test(a)?b:a;
+      const ft=/^\d/.test(a)?+a:+b;
+      const key=name.replace(/\s+/g,' ');
+      if(seen.has(key)) return;
+      seen.add(key);
+      const island=/island|front|rear/.test(key);
+      out.hoods.push({label:key.replace(/\b\w/g,c=>c.toUpperCase()), ft:ft, style:island?'island':'wall'});
     }
   });
-  const hp=t.match(/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*horizontal[^.\n]{0,80}?(\d+)\s*(?:access\s*)?panels?\b/);
-  if(hp){ const ft=+hp[1], pn=+hp[2]; const hit=out.pieces.find(p=>p.kind==='H' && Math.abs(p.ft-ft)<1e-9); if(hit) hit.panels=pn; else out.pieces.push({kind:'H',ft:ft,panels:pn,label:ft+' ft horizontal'}); out.panels=Math.max(out.panels,pn); }
-  DESC_APPL_WORDS.forEach(w=>{ if(t.indexOf(w)>=0){ const lab=w.split(' ').map(s=>s[0].toUpperCase()+s.slice(1)).join(' '); if(!out.appls.includes(lab)) out.appls.push(lab); }});
-  if(!out.hoodFt) out.warnings.push('No hood length found — defaulting to 8 ft.');
-  if(!out.collars) out.warnings.push('No collar count found — defaulting to 1.');
-  if(!out.pieces.length) out.warnings.push('No measured pieces found (e.g. "4 ft vertical", "20 ft horizontal").'); return out;
+  if(!out.hoods.length){
+    const hr=/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:wall\s+)?(?:hood|canopy)\b/;
+    if((m=hr.exec(t))) out.hoods.push({label:'Hood', ft:+m[1], style:/island/.test(t)?'island':'wall'});
+  }
+  const countRe=/\b(\d+|four|five|six|seven|eight)\s+hoods?\b/;
+  if((m=countRe.exec(t))){
+    const n=descNum(m[1])||+m[1];
+    while(out.hoods.length<n) out.hoods.push({label:'Hood '+(out.hoods.length+1), ft:out.hoods[0]?out.hoods[0].ft:8, style:/island/.test(t)?'island':'wall'});
+  }
+  const pieceRe=/(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(verticals?|verts?|rises?|horizontals?|horiz|sideways|slants?|45s?|90s?|up)|(verticals?|horizontals?|horiz|slants?|45|90|up)\s+(?:about\s+|another\s+|a\s+)?(\d+(?:\.\d+)?)\s*(?:ft|feet|')/gi;
+  const used=new Set();
+  if(out.gapFt) used.add(String(out.gapFt));
+  while((m=pieceRe.exec(t))){
+    const ft=+(m[1]||m[4]);
+    const word=(m[2]||m[3]||'').toLowerCase();
+    const at=m.index;
+    const window=t.slice(Math.max(0,at-18), at+m[0].length+12);
+    if(/apart|hood|canopy/.test(window) && !/horizontal|vertical|slant|90|rise/.test(word)) continue;
+    let kind='H';
+    if(/vert|rise|up/.test(word)) kind='V';
+    if(/slant|45/.test(word)) kind='S45';
+    if(/90/.test(word)) kind='U90';
+    if(/up to (?:the )?fan|to the fan/.test(t.slice(at, at+40)) && kind==='V') kind='U90';
+    const label=(kind==='V'?'vertical':kind==='H'?'horizontal':kind==='S45'?'45 slant':'90 up');
+    out.pieces.push({kind, ft, panels:0, label:ft+' ft '+label});
+  }
+  const hp=t.match(/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*horizont\w*[^.\n]{0,80}?(\d+)\s*(?:access\s*)?panels?\b/);
+  if(hp){
+    const hit=out.pieces.find(p=>p.kind==='H' && Math.abs(p.ft-+hp[1])<1e-9);
+    if(hit) hit.panels=+hp[2];
+  }
+  if(/stor/.test(raw.toLowerCase())) out.storiesAssumed=true;
+  ['fryer','charbroiler','char','griddle','flat grill','range','stove top','wok','oven','salamander','tilt skillet','kettle','steamer','solid fuel','pizza'].forEach(w=>{
+    if(t.indexOf(w)>=0){
+      const lab=w.split(' ').map(s=>s[0].toUpperCase()+s.slice(1)).join(' ');
+      if(!out.appls.includes(lab)) out.appls.push(lab);
+    }
+  });
+  if(!out.hoods.length){ out.hoods.push({label:'Hood', ft:8, style:'wall'}); out.warnings.push('No hood length found — defaulting to 8 ft.'); }
+  if(!out.collars) out.warnings.push('No collar count — one collar per hood.');
+  if(!out.pieces.length) out.warnings.push('No measured duct found. Say "100 ft horizontal" or "horizontal 100 feet".');
+  if(out.storiesAssumed) out.warnings.push('Story height assumed at 12 ft. Change it if the floor-to-floor is different.');
+  return out;
 }
-
+function placeMulti(spec){
+  state=blank();
+  state.name=spec.name||'Multi-hood asset';
+  state.addr=spec.addr||'One fan path';
+  state.ahj='Austin'; state.tech='DoubleA';
+  state.fanType=spec.fan||'Upblast';
+  state.fanCount=1;
+  state.hoodCount=spec.hoods.length;
+  state.packet='missing';
+  state.notes=spec.notes||'';
+  const nodes=[], edges=[];
+  const gap=spec.gapFt||Math.max(...spec.hoods.map(h=>h.ft),8)+4;
+  const pxGap=Math.min(280, Math.max(150, gap*5));
+  const hoods=[];
+  spec.hoods.forEach((h,i)=>{
+    const x=160+i*pxGap;
+    const node={id:uid(),type:'hood',x,y:620,label:h.label,hoodStyle:h.style||'wall',wFt:h.ft||8,dFt:h.style==='island'?8:4,banks:1};
+    nodes.push(node); hoods.push(node);
+    const c={id:uid(),type:'collar',x,y:540,label:h.label+' collar',size:''};
+    nodes.push(c);
+    edges.push({id:uid(),from:node.id,to:c.id,lengthFt:2,axis:'V',kind:'collar'});
+  });
+  const trunkY=430;
+  const joins=[];
+  hoods.forEach((h,i)=>{
+    const c=nodes.find(n=>n.type==='collar' && n.x===h.x);
+    const j={id:uid(),type:'elbow',x:h.x,y:trunkY,label:'Join '+(i+1)};
+    nodes.push(j); joins.push(j);
+    edges.push({id:uid(),from:c.id,to:j.id,lengthFt:4,axis:'V',kind:'V'});
+  });
+  for(let i=1;i<joins.length;i++){
+    edges.push({id:uid(),from:joins[i-1].id,to:joins[i].id,lengthFt:spec.gapFt||8,axis:'H',kind:'H',panels:0});
+  }
+  let prev=joins[joins.length-1];
+  let x=prev.x, y=prev.y;
+  spec.pieces.forEach(p=>{
+    const ft=Math.max(0.5,+p.ft||1);
+    const px=Math.min(240, Math.max(50, ft*2.2));
+    if(p.kind==='V'||p.kind==='U90') y-=px;
+    else if(p.kind==='S45'){ x+=px*0.7; y-=px*0.7; }
+    else x+=px;
+    const n={id:uid(),type:p.kind==='U90'||p.kind==='S45'?'elbow':(p.kind==='V'?'ductV':'ductH'),x:Math.round(x),y:Math.round(y),label:p.label};
+    nodes.push(n);
+    edges.push({id:uid(),from:prev.id,to:n.id,lengthFt:ft,axis:p.kind==='H'?'H':'V',kind:p.kind,panels:+p.panels||0});
+    for(let k=0;k<(+p.panels||0);k++){
+      const tt=(k+1)/((+p.panels||0)+1);
+      nodes.push({id:uid(),type:'panel',x:Math.round(prev.x+(n.x-prev.x)*tt),y:Math.round(prev.y+(n.y-prev.y)*tt),label:'AP-'+(nodes.filter(z=>z.type==='panel').length+1)});
+    }
+    prev=n;
+  });
+  const fan={id:uid(),type:'fan',x:Math.round(x+36),y:Math.round(y-36),label:spec.fan||'Upblast'};
+  nodes.push(fan);
+  edges.push({id:uid(),from:prev.id,to:fan.id,lengthFt:1,axis:'V',kind:'fan'});
+  if(spec.appls && spec.appls.length){
+    spec.appls.forEach((label,i)=>{
+      const hood=hoods[i%hoods.length];
+      const id=applId(label);
+      const sp=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
+      nodes.push({id:uid(),type:'appl',x:hood.x-40+i*36,y:700,label,appl:id,wFt:sp.wFt,dFt:2.4,parentHood:hood.id});
+    });
+  }
+  state.nodes=nodes; state.edges=edges; state.ductTape=spec.pieces;
+  state.asset={line:state.name, hoods:spec.hoods.length, len:spec.hoods.map(h=>h.ft).join('+'), collars:spec.collars||spec.hoods.length, filters:spec.filters||0, horiz:spec.gapFt, panels:spec.panels||0, appl:spec.appls||[], fan:spec.fan, fans:1};
+  stateToForm();
+  if($('hoodCount')) $('hoodCount').value=spec.hoods.length;
+  if($('fanCount')) $('fanCount').value=1;
+  if($('fanType')) $('fanType').value=spec.fan;
+  if($('assetCard')) $('assetCard').innerHTML='<b class="ok">1 asset · '+spec.hoods.length+' hood'+(spec.hoods.length>1?'s':'')+' · 1 fan</b><br>'+spec.hoods.map(h=>h.label+' '+h.ft+"'").join(' · ')+(spec.gapFt?' · '+spec.gapFt+"' apart":'')+'<br>Ends at '+spec.fan+'. Second fan would be a second asset.';
+  selected=null; lastId=fan.id; draw(); audit(); renderLib();
+  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
+}
 function describeRun(){
-  const raw=$('descInput').value; const spec=parseDescribe(raw);
-  if(!spec.pieces.length){ if($('descOut'))$('descOut').innerHTML='<span class="bad">No measured pieces parsed.</span> Type lengths like <b>4 ft vertical</b>, <b>20 ft horizontal with 3 panels</b>, <b>12 ft 90 up to fan</b>.'; return; }
-  placeRun({name:'Described run',addr:'From typed description',hood:'Hood',hoodFt:spec.hoodFt||8,collar:'',fan:spec.fan,notes:'Described: '+(raw||'').replace(/\s+/g,' ').slice(0,220),pieces:spec.pieces});
-  const h=state.nodes.find(n=>n.type==='hood'); if(h){ h.wFt=spec.hoodFt||h.wFt; if(spec.filters) h.filters=spec.filters; }
-  const cols=state.nodes.filter(n=>n.type==='collar'); for(let i=0;i<cols.length;i++){ if(i<(spec.collars||cols.length)) cols[i].label='Collar '+(i+1); }
-  if(spec.horiz){ const he=state.edges.find(e=>e.axis==='H' && e.kind==='H'); if(he) he.lengthFt=spec.horiz; }
-  if(spec.appls.length){ const hood=state.nodes.find(n=>n.type==='hood'); spec.appls.forEach((label,i)=>{ const id=applId(label); const sp=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0]; state.nodes.push({id:uid(),type:'appl',x:140+i*72,y:580,label:label,appl:id,wFt:sp.wFt,dFt:2.4,parentHood:hood.id}); }); }
-  state.asset={line:state.name,len:spec.hoodFt||8,collars:spec.collars||1,filters:spec.filters||0,horiz:spec.horiz||null,panels:spec.panels||0,appl:spec.appls,fan:spec.fan}; if($('assetLen'))$('assetLen').value=spec.hoodFt||''; if($('assetCollars'))$('assetCollars').value=spec.collars||''; if($('assetFilters'))$('assetFilters').value=spec.filters||''; if($('assetHoriz'))$('assetHoriz').value=spec.horiz||''; if($('assetPanels'))$('assetPanels').value=spec.panels||''; if($('applLine'))$('applLine').value=spec.appls.join(', '); if($('fanType'))$('fanType').value=spec.fan; draw(); audit();
-  const tot=spec.pieces.reduce((s,p)=>s+p.ft,0); const pans=spec.pieces.reduce((s,p)=>s+(+p.panels||0),0);
-  let html='<b class="ok">Drew it.</b> '+spec.pieces.length+' pieces · <b class="ok">'+tot+' ft</b> · '+pans+' panels · ends at <b class="ok">'+spec.fan+'</b>.'; if(spec.appls.length) html+=' Appliances: '+spec.appls.join(' · ')+'.'; if(spec.warnings.length) html+='<br><span class="warn">'+spec.warnings.join(' ')+'</span>'; html+='<br><span class="text-[11px] text-cyan-300">Tip: say "with 3 access panels" right after a horizontal length to pin panels to that run.</span>'; if($('descOut'))$('descOut').innerHTML=html; document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
+  const raw=$('descInput').value;
+  const spec=parseDescribe(raw);
+  if(!spec.pieces.length && spec.hoods.length<2){
+    if($('descOut')) $('descOut').innerHTML='<span class="bad">No measured pieces parsed.</span> Try <b>100 ft horizontal</b> or <b>horizontal 100 feet</b>, and <b>two stories</b> for a 24 ft rise.';
+    return;
+  }
+  const multi=spec.hoods.length>1 || spec.gapFt;
+  if(multi){
+    placeMulti({name:'Multi-hood · one fan', addr:'One asset', fan:spec.fan, hoods:spec.hoods, gapFt:spec.gapFt, pieces:spec.pieces, appls:spec.appls, notes:'Described: '+(raw||'').replace(/\s+/g,' ').slice(0,240)});
+  } else {
+    placeRun({name:'Described run', addr:'From typed description', hood:spec.hoods[0].label, hoodFt:spec.hoods[0].ft, collar:'', fan:spec.fan, notes:'Described: '+(raw||'').replace(/\s+/g,' ').slice(0,220), pieces:spec.pieces});
+    const h=state.nodes.find(n=>n.type==='hood');
+    if(h && spec.filters) h.filters=spec.filters;
+    if(spec.appls.length){
+      const hood=state.nodes.find(n=>n.type==='hood');
+      spec.appls.forEach((label,i)=>{
+        const id=applId(label); const sp=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
+        state.nodes.push({id:uid(),type:'appl',x:140+i*72,y:640,label,appl:id,wFt:sp.wFt,dFt:2.4,parentHood:hood.id});
+      });
+    }
+    state.asset={line:state.name,len:spec.hoods[0].ft,collars:spec.collars||1,filters:spec.filters||0,panels:spec.panels||0,appl:spec.appls,fan:spec.fan,hoods:1,fans:1};
+    draw(); audit();
+  }
+  const tot=spec.pieces.reduce((s,p)=>s+(+p.ft||0),0);
+  let html='<b class="ok">Drew it.</b> '+spec.hoods.length+' hood'+(spec.hoods.length>1?'s':'')+' on <b class="ok">1 fan</b> · '+spec.pieces.length+' duct pieces · <b class="ok">'+tot+' ft</b>.';
+  if(spec.gapFt) html+=' Lines '+spec.gapFt+' ft apart.';
+  if(spec.warnings.length) html+='<br><span class="warn">'+spec.warnings.join(' ')+'</span>';
+  html+='<br><span class="text-[11px] text-cyan-300">Asset = the fan path. Add a second fan and it becomes a second asset.</span>';
+  if($('descOut')) $('descOut').innerHTML=html;
 }
-
 $('btnDescribe').onclick = describeRun;
 $('btnDescClear').onclick = () => { if($('descInput'))$('descInput').value=''; if($('descOut'))$('descOut').innerHTML=''; };
-$('btnDescDemo1').onclick = () => { if($('descInput'))$('descInput').value='12 ft wall canopy with 2 collars and 6 baffle filters. Appliances left to right: fryer, flat grill, stove top, char grill. 10 ft vertical rise, 8 ft horizontal common duct with 2 access panels, 12 ft 90 up to an upblast hinged fan. Cooking volume moderate, $650 per 3 months, 2 techs, 3.5 hours.'; describeRun(); };
+$('btnDescDemo1').onclick = () => { if($('descInput'))$('descInput').value='12 ft wall canopy with 2 collars and 6 baffle filters. Appliances left to right: fryer, flat grill, stove top, char grill. 10 ft vertical rise, 8 ft horizontal common duct with 2 access panels, 12 ft 90 up to an upblast hinged fan.'; describeRun(); };
 $('btnDescDemo2').onclick = () => { if($('descInput'))$('descInput').value='8 ft wall canopy, 1 collar. 4 ft vertical off collar, 3 ft 45 slant away from hood, 3 ft 45 into horizontal, 20 ft horizontal with 3 access panels, 12 ft 90 up to an upblast fan.'; describeRun(); };
+$('btnDescDemo3').onclick = () => { if($('descInput'))$('descInput').value='Multi-hood system. Main line hood 10 ft, back line hood 8 ft, 40 feet apart. Joining ductwork horizontals about a hundred feet, then verticals two stories, then horizontals another 10 feet, then verticals one more story to the upblast fan.'; describeRun(); };
 
 function playDemoVoice(){ const a=$('demoVoice'); if(!a) return; a.currentTime=0; a.play().catch(()=>{}); }
 $('btnAddAsset').onclick = addAssetFromCard;
@@ -836,7 +987,7 @@ $('btnAddDuct').onclick = () => {
   const px=Math.min(280,ft*12); let x=prev.x,y=prev.y;
   if(kind==='V'||kind==='U90') y-=px; else if(kind==='S45'){ x+=px*0.7; y-=px*0.7; } else x+=px;
   const n={id:uid(),type:kind==='U90'||kind==='S45'?'elbow':(kind==='V'?'ductV':'ductH'),x:Math.round(x),y:Math.round(y),label:(ft+"' "+(kind==='V'?'vertical':kind==='H'?'horizontal':kind==='S45'?'45':kind))}; state.nodes.push(n); addEdge(prev.id,n.id,kind==='H'?'H':'V',kind,ft); for(let k=0;k<panels;k++){ const t=(k+1)/(panels+1); state.nodes.push({id:uid(),type:'panel',x:Math.round(prev.x+(n.x-prev.x)*t),y:Math.round(prev.y+(n.y-prev.y)*t),label:'AP-'+(state.nodes.filter(z=>z.type==='panel').length+1)}); } lastId=n.id; selected=null; draw(); audit(); renderLib();
-  if($('tape')){ const tape=state.ductTape||[]; tape.push({kind,ft,panels,label:n.label}); state.ductTape=tape; const total=tape.reduce((s,p)=>s+p.ft,0); const pans=tape.reduce((s,p)=>s+(+p.panels||0),0); $('<tape').innerHTML=tape.map((p,i)=>i+1+'. <b class="ok">'+p.label+'</b> · '+p.ft+' ft · '+(p.panels||0)+' panel(s)').join('<br>')+'<br><b class="ok">'+total+' ft</b> total · '+pans+' panels'; }
+  if($('tape')){ const tape=state.ductTape||[]; tape.push({kind,ft,panels,label:n.label}); state.ductTape=tape; const total=tape.reduce((s,p)=>s+p.ft,0); const pans=tape.reduce((s,p)=>s+(+p.panels||0),0); $('tape').innerHTML=tape.map((p,i)=>i+1+'. <b class="ok">'+p.label+'</b> · '+p.ft+' ft · '+(p.panels||0)+' panel(s)').join('<br>')+'<br><b class="ok">'+total+' ft</b> total · '+pans+' panels'; }
   document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
 };
 $('btnConnect').onclick = () => {
