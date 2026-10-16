@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>NEXUS USB Label Designer · Elite · DoubleA @ AntManThePro</title>
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="description" content="Elite live Canvas USB label designer for Multi-OS Gaming USB. NEXUS by DoubleA @ AntManThePro.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230a0a0f' stroke='%2300ff87' stroke-width='1.5'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2360efff' stroke-width='1.2'/%3E%3Cpath d='M20 42 L32 14 L44 42 M25.5 32 H38.5' fill='none' stroke='%2300ff87' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='32' cy='32' r='3.2' fill='%23ff0080'/%3E%3C/svg%3E">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0a0a0f; color: #00ff87; font-family: 'Courier New', Courier, monospace; }
+    .glow-g { text-shadow: 0 0 8px #00ff87, 0 0 16px #00ff87; }
+    .glow-c { text-shadow: 0 0 6px #60efff; }
+    .glow-p { text-shadow: 0 0 6px #ff0080; }
+    .glow-y { text-shadow: 0 0 6px #ffcc00; }
+    input:focus, select:focus { outline: none; box-shadow: 0 0 8px currentColor; }
+    #aiLog::-webkit-scrollbar { width: 4px; }
+    #aiLog::-webkit-scrollbar-thumb { background: #ff0080; }
+    canvas { image-rendering: auto; max-width: 100%; height: auto; }
+    .metric { font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body class="min-h-screen p-3 md:p-6">
+  <header class="nexus-stamp flex items-center justify-between mb-4 pb-3 border-b border-[#00ff87]/30 max-w-4xl mx-auto">
+    <div>
+      <div class="text-xs text-[#60efff] tracking-widest">DoubleA · AntManThePro</div>
+      <h1 class="text-3xl font-bold text-[#00ff87] glow-g">NEXUS</h1>
+      <p class="text-sm text-[#ff0080]">NExtended Xperimental USers</p>
+    </div>
+    <svg width="56" height="56" viewBox="0 0 64 64" aria-label="NEXUS sigil">
+      <rect width="64" height="64" rx="14" fill="#0a0a0f" stroke="#00ff87" stroke-width="1.5"/>
+      <circle cx="32" cy="32" r="19" fill="none" stroke="#60efff" stroke-width="1.2"/>
+      <path d="M20 42 L32 14 L44 42 M25.5 32 H38.5" fill="none" stroke="#00ff87" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="32" cy="32" r="3.2" fill="#ff0080"/>
+    </svg>
+  </header>
+
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-3">
+      <div class="text-lg md:text-xl font-bold text-[#60efff] glow-c tracking-widest">USB LABEL DESIGNER · ELITE v2.2</div>
+      <div class="text-xs text-[#00ff87]/70 tracking-wide flex justify-center gap-4 mt-1">
+        <span class="metric" id="fps">FPS: --</span>
+        <span>Live Canvas · Dual-Boot Surface Pro 7 · Field Payload Ready</span>
+      </div>
+    </div>
+
+    <div class="overflow-x-auto border border-[#00ff87]/25 shadow-[0_0_40px_rgba(0,255,135,0.15)] mb-4">
+      <canvas id="labelCanvas" width="820" height="310" class="block mx-auto"></canvas>
+    </div>
+
+    <div class="flex flex-wrap gap-3 mb-3 items-end">
+      <div class="flex-1 min-w-[180px]">
+        <div class="text-[10px] text-[#60efff] tracking-widest mb-1">▸ TITLE</div>
+        <input id="titleInput" class="w-full bg-black/40 border border-[#00ff87]/50 text-[#00ff87] p-2 text-sm">
+      </div>
+      <div class="flex-1 min-w-[140px]">
+        <div class="text-[10px] text-[#ffcc00] tracking-widest mb-1">▸ BOTTOM</div>
+        <input id="bottomInput" class="w-full bg-black/40 border border-[#ffcc00]/50 text-[#ffcc00] p-2 text-sm">
+      </div>
+      <button id="exportBtn" class="bg-gradient-to-r from-[#00ff87] to-[#60efff] text-[#0a0a0f] font-bold px-4 py-2 text-sm tracking-wide hover:shadow-lg hover:shadow-[#00ff87]/40">⬇ PNG</button>
+      <button id="exportJson" class="bg-[#ff0080]/80 text-white font-bold px-3 py-2 text-sm">JSON</button>
+    </div>
+
+    <div class="flex flex-wrap gap-4 mb-4 text-xs text-[#60efff]/80">
+      <label>Matrix Density <input type="range" id="density" min="0.1" max="1" step="0.1" value="0.28" class="ml-1 align-middle"></label>
+      <label>Pulse Speed <input type="range" id="pulseSpeed" min="0.5" max="2" step="0.1" value="1" class="ml-1 align-middle"></label>
+      <button id="shareBtn" class="border border-[#60efff]/40 px-2 py-1 hover:bg-[#60efff]/10">SHARE LINK</button>
+    </div>
+
+    <div class="border border-[#ff0080]/50 bg-[#ff0080]/5 mb-4">
+      <div class="flex items-center justify-between p-2 border-b border-[#ff0080]/30">
+        <span class="text-xs text-[#ff0080] tracking-widest font-bold">⚡ NEXUS AI — LOCAL KERNEL</span>
+        <span id="aiStatus" class="text-[10px] text-[#00ff87] hidden">● PROCESSING</span>
+      </div>
+      <div id="aiLog" class="h-36 overflow-y-auto p-3 text-xs leading-relaxed"></div>
+      <div class="flex border-t border-[#ff0080]/30">
+        <input id="aiInput" placeholder=' "set title to CYBER BEAST" · "alias" · "dual-boot specs" ' class="flex-1 bg-transparent border-none text-[#ffcc00] p-3 text-sm">
+        <button id="sendBtn" class="bg-[#ff0080] text-white px-4 font-bold text-sm">SEND</button>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-5">
+      <button class="quick-prompt text-[10px] border border-[#60efff]/30 bg-[#60efff]/5 text-[#60efff] px-2 py-1 hover:bg-[#60efff]/15" data-prompt="change bottom text to GHOST MODE">GHOST MODE</button>
+      <button class="quick-prompt text-[10px] border border-[#60efff]/30 bg-[#60efff]/5 text-[#60efff] px-2 py-1 hover:bg-[#60efff]/15" data-prompt="set title to 💀 NEXUS BEAST USB 💀">SKULL TITLE</button>
+      <button class="quick-prompt text-[10px] border border-[#60efff]/30 bg-[#60efff]/5 text-[#60efff] px-2 py-1 hover:bg-[#60efff]/15" data-prompt="suggest a hacker alias">HACKER ALIAS</button>
+      <button class="quick-prompt text-[10px] border border-[#60efff]/30 bg-[#60efff]/5 text-[#60efff] px-2 py-1 hover:bg-[#60efff]/15" data-prompt="what does dual-boot mean?">DUAL-BOOT</button>
+      <button class="quick-prompt text-[10px] border border-[#60efff]/30 bg-[#60efff]/5 text-[#60efff] px-2 py-1 hover:bg-[#60efff]/15" data-prompt="export payload notes">PAYLOAD NOTES</button>
+    </div>
+
+    <div class="border border-[#60efff]/20 bg-black/30 p-3 text-xs text-[#60efff]/90">
+      <h3 class="text-[#60efff] font-bold tracking-widest mb-1">ELITE SPECS · SURFACE PRO 7 DUAL-BOOT USB</h3>
+      <ul class="space-y-0.5 list-disc list-inside opacity-90">
+        <li>Windows 11 gaming stack (Steam/Proton) + Ubuntu 22.04 LTS (dev, SDR, payloads)</li>
+        <li>Python 3.12 · NEXUS field tools · DSTIKE BadUSB notes embedded</li>
+        <li>i5 · 16GB · 256GB eMMC + this external USB</li>
+        <li>Shareable hash state · PNG + JSON export · 60fps Canvas kernel</li>
+        <li>Operator: DoubleA @ AntManThePro · Buda, TX · Field Ops / QA</li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="text-center text-[9px] text-[#333] tracking-widest mt-8">NEXUS DESIGNER ELITE v2.2 · DoubleA · AntManThePro · NExtended Xperimental USers</footer>
+
+  <script>
+    const LW = 820, LH = 310;
+    const FSIZ = 13;
+    const COLS = Math.floor(LW / FSIZ);
+    const MC = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミ01ABCDEF♦♠♣♥';
+
+    let titleText = '🔥 MULTI-OS GAMING USB 🔥';
+    let bottomText = 'PRO - A.A. - FLASH';
+    let density = 0.28;
+    let pulseSpeed = 1;
+    let frame = 0;
+    let lastTime = performance.now();
+    let frames = 0;
+    const drops = Array.from({ length: COLS }, () => Math.floor(Math.random() * 28));
+
+    function loadState() {
+      const hash = location.hash.slice(1);
+      if (!hash) return;
+      const params = new URLSearchParams(hash);
+      if (params.has('t')) titleText = decodeURIComponent(params.get('t'));
+      if (params.has('b')) bottomText = decodeURIComponent(params.get('b'));
+    }
+    function saveState() {
+      const params = new URLSearchParams();
+      params.set('t', encodeURIComponent(titleText));
+      params.set('b', encodeURIComponent(bottomText));
+      location.hash = params.toString();
+    }
+    loadState();
+
+    function drawPython(ctx, cx, cy, s) {
+      ctx.save();
+      ctx.translate(cx - s / 2, cy - s / 2);
+      ctx.fillStyle = '#4B8BBE';
+      ctx.beginPath();
+      ctx.moveTo(s * 0.5, 0); ctx.lineTo(s * 0.85, s * 0.15); ctx.lineTo(s * 0.85, s * 0.5);
+      ctx.lineTo(s * 0.15, s * 0.5); ctx.lineTo(s * 0.15, s * 0.15); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#FFD43B';
+      ctx.beginPath();
+      ctx.moveTo(s * 0.5, s); ctx.lineTo(s * 0.15, s * 0.85); ctx.lineTo(s * 0.15, s * 0.5);
+      ctx.lineTo(s * 0.85, s * 0.5); ctx.lineTo(s * 0.85, s * 0.85); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.beginPath(); ctx.arc(s * 0.35, s * 0.3, s * 0.07, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(s * 0.65, s * 0.7, s * 0.07, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = `bold ${s * 0.16}px monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('PYTHON', s / 2, s * 0.5);
+      ctx.restore();
+    }
+
+    function drawUbuntu(ctx, cx, cy, s) {
+      ctx.save();
+      ctx.translate(cx - s / 2, cy - s / 2);
+      const r = s * 0.38, c = s / 2;
+      ctx.strokeStyle = '#E95420'; ctx.lineWidth = s * 0.1;
+      ctx.beginPath(); ctx.arc(c, c, r * 0.82, 0, Math.PI * 2); ctx.stroke();
+      const angles = [-Math.PI / 2, (2 * Math.PI / 3) - Math.PI / 2, (4 * Math.PI / 3) - Math.PI / 2];
+      angles.forEach(a => {
+        const nx = c + Math.cos(a) * r * 0.82, ny = c + Math.sin(a) * r * 0.82;
+        ctx.fillStyle = '#E95420';
+        ctx.beginPath(); ctx.arc(nx, ny, s * 0.12, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = 'rgba(233,84,32,0.3)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(c, c); ctx.lineTo(nx, ny); ctx.stroke();
+      });
+      ctx.fillStyle = '#E95420';
+      ctx.beginPath(); ctx.arc(c, c, s * 0.06, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = 'rgba(233,84,32,0.8)';
+      ctx.font = `${s * 0.13}px monospace`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText('UBUNTU', c, c + r * 0.9);
+      ctx.restore();
+    }
+
+    function renderLabel(ctx, matrixCanvas, f) {
+      const pulse = (Math.sin(f * 0.025 * pulseSpeed) + 1) / 2;
+      const pulse2 = (Math.sin(f * 0.04 * pulseSpeed + 1) + 1) / 2;
+
+      ctx.fillStyle = '#050a0e';
+      ctx.fillRect(0, 0, LW, LH);
+
+      ctx.globalAlpha = density;
+      ctx.drawImage(matrixCanvas, 0, 0);
+      ctx.globalAlpha = 1;
+
+      ctx.strokeStyle = 'rgba(0,255,65,0.07)';
+      ctx.lineWidth = 1;
+      for (let i = 1; i < 6; i++) {
+        ctx.beginPath(); ctx.moveTo(0, (LH / 6) * i); ctx.lineTo(LW, (LH / 6) * i); ctx.stroke();
+      }
+      for (let i = 1; i < 18; i++) {
+        ctx.beginPath(); ctx.moveTo((LW / 18) * i, 0); ctx.lineTo((LW / 18) * i, LH); ctx.stroke();
+      }
+
+      ctx.fillStyle = `rgba(0,255,135,${0.15 + pulse * 0.2})`;
+      [[1,1],[3,2],[5,4],[7,1],[9,3],[11,5],[13,2],[15,4],[17,1],[2,5],[4,3],[6,2],[8,4],[10,1],[12,3],[14,5],[16,2]].forEach(([xi, yi]) => {
+        ctx.beginPath();
+        ctx.arc((LW / 18) * xi, (LH / 6) * yi, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.strokeStyle = '#00ff87';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = '#00ff87';
+      ctx.shadowBlur = 8 + pulse * 14;
+      ctx.strokeRect(6, 6, LW - 12, LH - 12);
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = 'rgba(0,255,135,0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(14, 14, LW - 28, LH - 28);
+
+      [[6,6,1,1],[LW-6,6,-1,1],[6,LH-6,1,-1],[LW-6,LH-6,-1,-1]].forEach(([bx,by,dx,dy]) => {
+        ctx.strokeStyle = '#ff0080';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ff0080';
+        ctx.shadowBlur = 6 + pulse2 * 6;
+        ctx.beginPath();
+        ctx.moveTo(bx + dx * 28, by); ctx.lineTo(bx, by); ctx.lineTo(bx, by + dy * 28);
+        ctx.stroke();
+      });
+      ctx.shadowBlur = 0;
+
+      const blinkOn = Math.sin(f * 0.07) > 0;
+      ctx.fillStyle = blinkOn ? '#00ff87' : '#001100';
+      ctx.shadowColor = blinkOn ? '#00ff87' : 'transparent';
+      ctx.shadowBlur = blinkOn ? 10 : 0;
+      ctx.beginPath(); ctx.arc(28, 28, 5, 0, Math.PI * 2); ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.font = '9px monospace';
+      ctx.fillStyle = '#00ff87';
+      ctx.textAlign = 'left';
+      ctx.fillText('LIVE', 38, 32);
+
+      ctx.font = '9px monospace';
+      ctx.fillStyle = 'rgba(96,239,255,0.5)';
+      ctx.textAlign = 'right';
+      ctx.fillText('ELITE v2.2 · NEXUS', LW - 22, 32);
+
+      drawPython(ctx, 80, LH / 2 - 28, 56);
+      drawUbuntu(ctx, 80, LH / 2 + 48, 48);
+
+      ctx.strokeStyle = 'rgba(0,255,135,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 5]);
+      ctx.beginPath(); ctx.moveTo(140, 24); ctx.lineTo(140, LH - 24); ctx.stroke();
+      ctx.setLineDash([]);
+
+      const titleX = LW / 2;
+      ctx.font = '14px monospace';
+      ctx.fillStyle = `rgba(255,204,0,${0.4 + pulse * 0.4})`;
+      ctx.textAlign = 'center';
+      ctx.fillText('━━━━━━━━━━━━━━━━━━━━━━━', titleX, LH / 2 - 50);
+
+      ctx.font = `bold ${28 + pulse * 2}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#00ff87';
+      ctx.shadowColor = '#00ff87';
+      ctx.shadowBlur = 14 + pulse * 10;
+      ctx.fillText(titleText, titleX, LH / 2 - 20);
+      ctx.shadowBlur = 0;
+
+      ctx.font = '11px monospace';
+      ctx.fillStyle = '#60efff';
+      ctx.shadowColor = '#60efff';
+      ctx.shadowBlur = 5;
+      ctx.fillText('DUAL-BOOT · MULTI-PLATFORM · GAMING OPTIMIZED', titleX, LH / 2 + 8);
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = 'rgba(96,239,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 6]);
+      ctx.beginPath(); ctx.moveTo(160, LH / 2 + 22); ctx.lineTo(LW - 150, LH / 2 + 22); ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.font = 'bold 20px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#ffcc00';
+      ctx.shadowColor = '#ffcc00';
+      ctx.shadowBlur = 12 + pulse2 * 8;
+      ctx.fillText(bottomText, titleX, LH - 28);
+      ctx.shadowBlur = 0;
+
+      const winX = LW - 78, winY = LH / 2 - 10, winS = 46;
+      const wColors = ['#F25022', '#7FBA00', '#00A4EF', '#FFB900'];
+      [[0,0],[1,0],[0,1],[1,1]].forEach(([xi,yi], i) => {
+        ctx.fillStyle = wColors[i];
+        ctx.fillRect(winX + xi * (winS / 2 + 2), winY + yi * (winS / 2 + 2), winS / 2, winS / 2);
+      });
+      ctx.font = '9px monospace';
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.textAlign = 'center';
+      ctx.fillText('WINDOWS', winX + winS / 2, winY + winS + 14);
+
+      ctx.font = 'bold 10px monospace';
+      ctx.fillStyle = '#60efff';
+      ctx.textAlign = 'right';
+      ctx.fillText('SURFACE PRO 7', LW - 22, LH - 50);
+      ctx.fillStyle = 'rgba(96,239,255,0.4)';
+      ctx.font = '9px monospace';
+      ctx.fillText('i5 · 16GB · 256GB', LW - 22, LH - 38);
+
+      ctx.fillStyle = 'rgba(0,0,0,0.1)';
+      for (let sy = 0; sy < LH; sy += 3) ctx.fillRect(0, sy, LW, 1.5);
+    }
+
+    const canvas = document.getElementById('labelCanvas');
+    const ctx = canvas.getContext('2d');
+    const matrixCanvas = document.createElement('canvas');
+    matrixCanvas.width = LW; matrixCanvas.height = LH;
+    const mctx = matrixCanvas.getContext('2d');
+    mctx.fillStyle = '#000';
+    mctx.fillRect(0, 0, LW, LH);
+
+    function tick(now) {
+      frame++;
+      frames++;
+      if (now - lastTime >= 1000) {
+        document.getElementById('fps').textContent = `FPS: ${frames}`;
+        frames = 0;
+        lastTime = now;
+      }
+
+      mctx.fillStyle = 'rgba(0,0,0,0.05)';
+      mctx.fillRect(0, 0, LW, LH);
+      mctx.fillStyle = '#00ff41';
+      mctx.font = `${FSIZ}px monospace`;
+      drops.forEach((y, i) => {
+        mctx.fillText(MC[Math.floor(Math.random() * MC.length)], i * FSIZ, y * FSIZ);
+        if (y * FSIZ > LH && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      });
+      renderLabel(ctx, matrixCanvas, frame);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    const titleInput = document.getElementById('titleInput');
+    const bottomInput = document.getElementById('bottomInput');
+    titleInput.value = titleText;
+    bottomInput.value = bottomText;
+    titleInput.addEventListener('input', e => { titleText = e.target.value; saveState(); });
+    bottomInput.addEventListener('input', e => { bottomText = e.target.value; saveState(); });
+
+    document.getElementById('density').addEventListener('input', e => density = parseFloat(e.target.value));
+    document.getElementById('pulseSpeed').addEventListener('input', e => pulseSpeed = parseFloat(e.target.value));
+
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.download = 'nexus-usb-label-elite.png';
+      a.href = canvas.toDataURL('image/png');
+      a.click();
+      flashBtn(document.getElementById('exportBtn'), '✓ SAVED');
+    });
+
+    document.getElementById('exportJson').addEventListener('click', () => {
+      const data = { title: titleText, bottom: bottomText, density, pulseSpeed, timestamp: new Date().toISOString(), operator: 'DoubleA @ AntManThePro' };
+      const a = document.createElement('a');
+      a.download = 'nexus-usb-label.json';
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' }));
+      a.click();
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', () => {
+      saveState();
+      navigator.clipboard.writeText(location.href).then(() => flashBtn(document.getElementById('shareBtn'), 'COPIED'));
+    });
+
+    function flashBtn(btn, text) {
+      const orig = btn.textContent;
+      btn.textContent = text;
+      setTimeout(() => btn.textContent = orig, 1000);
+    }
+
+    const aiLog = document.getElementById('aiLog');
+    const aiStatus = document.getElementById('aiStatus');
+    function addLog(role, text) {
+      const div = document.createElement('div');
+      div.className = 'mb-1 flex gap-2';
+      div.innerHTML = `<span class="opacity-50">${role === 'u' ? '»' : role === 'a' ? '◈' : '//'}</span><span class="${role === 'u' ? 'text-[#ffcc00]' : role === 'a' ? 'text-[#60efff]' : 'text-[#333]'}">${text}</span>`;
+      aiLog.appendChild(div);
+      aiLog.scrollTop = aiLog.scrollHeight;
+    }
+    addLog('s', '// NEXUS AI ELITE — local kernel · hash state · dual-boot payload');
+    addLog('s', '// Commands: set title/bottom to X · alias · dual-boot · payload notes');
+
+    function parseCommand(msg) {
+      const lower = msg.toLowerCase().trim();
+      if (lower.includes('change') || lower.includes('set') || lower.includes('update') || lower.includes('make')) {
+        const toMatch = msg.match(/(?:to|as)\s+(.+)/i);
+        if (toMatch) {
+          const val = toMatch[1].trim();
+          if (lower.includes('bottom') || lower.includes('btm')) return { action: 'update', bottomText: val, message: 'Bottom locked.' };
+          return { action: 'update', title: val, message: 'Title locked.' };
+        }
+      }
+      if (lower.includes('os') || lower.includes('dual') || lower.includes('boot')) {
+        return { action: 'chat', message: 'Dual-boot: Win11 (gaming/Steam) + Ubuntu 22.04 (dev/payloads/SDR). Surface Pro 7 i5-16GB-256GB.' };
+      }
+      if (lower.includes('alias') || lower.includes('hacker')) {
+        const aliases = ['GhostAA', 'NEXUS-FLASH', 'PRO-A.A.', 'DoubleA-CORE', 'AntMan-PAYLOAD', 'Field-Zero'];
+        return { action: 'chat', message: 'Alias: ' + aliases[Math.floor(Math.random() * aliases.length)] };
+      }
+      if (lower.includes('payload') || lower.includes('notes') || lower.includes('spec')) {
+        return { action: 'chat', message: 'Payload notes: dual-boot USB with NEXUS tools, DSTIKE-compatible, Python field scripts. Export JSON for config lock.' };
+      }
+      return { action: 'chat', message: 'Use "set title to XYZ" or ask dual-boot / alias / payload.' };
+    }
+
+    function runAI() {
+      const input = document.getElementById('aiInput');
+      const msg = input.value.trim();
+      if (!msg) return;
+      addLog('u', msg);
+      input.value = '';
+      aiStatus.classList.remove('hidden');
+      setTimeout(() => {
+        const result = parseCommand(msg);
+        if (result.action === 'update') {
+          if (result.title) { titleText = result.title; titleInput.value = result.title; }
+          if (result.bottomText) { bottomText = result.bottomText; bottomInput.value = result.bottomText; }
+          saveState();
+        }
+        addLog('a', result.message || '✓');
+        aiStatus.classList.add('hidden');
+      }, 300);
+    }
+
+    document.getElementById('sendBtn').addEventListener('click', runAI);
+    document.getElementById('aiInput').addEventListener('keydown', e => { if (e.key === 'Enter') runAI(); });
+
+    document.querySelectorAll('.quick-prompt').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('aiInput').value = btn.dataset.prompt;
+        runAI();
+      });
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'e' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); document.getElementById('exportBtn').click(); }
+    });
+  </script>
+</body>
+</html>
