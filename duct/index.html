@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
 <meta name="theme-color" content="#0a0a0f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
-<title>NEXUS Duct As-Built — Field Diagram Kernel</title>
+<meta name="apple-mobile-web-app-title" content="NEXUS Duct"/>
+<title>NEXUS Duct As-Built v2 — Field Kernel</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   :root{
@@ -13,7 +14,7 @@
     --panel:#101018;--line:#1e3a2f;--muted:#7aa89a;
   }
   *{box-sizing:border-box}
-  html,body{margin:0;background:#0a0a0f;color:#e8fff4;font-family:ui-sans-serif,system-ui,sans-serif;min-height:100%}
+  html,body{margin:0;background:#0a0a0f;color:#e8fff4;font-family:ui-sans-serif,system-ui,sans-serif;min-height:100%;overflow-x:hidden}
   .glow{text-shadow:0 0 12px var(--g)}
   .card{background:#111118;border:1px solid var(--line);border-radius:12px}
   .chip{border:1px solid var(--g);color:var(--g);padding:2px 8px;border-radius:999px;font-size:10px;letter-spacing:.1em;text-transform:uppercase}
@@ -21,49 +22,42 @@
   .chip.bad{border-color:var(--p);color:var(--p)}
   input,textarea,select{background:#0c0c12;border:1px solid #2a3d34;color:#e8fff4;border-radius:8px;padding:9px 10px;width:100%;font-size:14px}
   label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:block;margin:8px 0 4px}
-  button.act{background:#00ff87;color:#04140c;font-weight:800;border:0;border-radius:8px;padding:11px 14px}
-  button.ghost{background:transparent;border:1px solid #2a3d34;color:#9fe8c8;border-radius:8px;padding:9px 10px}
-  button.tool{background:#0c0c12;border:1px solid #2a3d34;color:#cfeee0;border-radius:8px;padding:8px 8px;font-size:11px;letter-spacing:.04em}
+  button.act{background:#00ff87;color:#04140c;font-weight:800;border:0;border-radius:8px;padding:11px 14px;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid #2a3d34;color:#9fe8c8;border-radius:8px;padding:9px 10px;cursor:pointer}
+  button.tool{background:#0c0c12;border:1px solid #2a3d34;color:#cfeee0;border-radius:8px;padding:8px 8px;font-size:11px;letter-spacing:.04em;cursor:pointer}
   button.tool.on{border-color:var(--g);color:var(--g);box-shadow:0 0 0 1px #00ff8733,0 0 16px #00ff8722}
-  button.danger{border-color:#5a2038;color:#ff8ab8}
-  #boardWrap{position:relative;border:1px dashed #1e3a2f;border-radius:10px;overflow:hidden;background:#07070b}
-  #board{width:100%;height:min(78vh,820px);min-height:560px;background:#07070b;display:block;cursor:crosshair;touch-action:none}
+  #boardWrap{position:relative;border:1px dashed #1e3a2f;border-radius:10px;overflow:hidden;background:#07070b;touch-action:none;-webkit-user-select:none;user-select:none}
+  #board{width:100%;height:min(70vh,720px);min-height:480px;background:#07070b;display:block;cursor:crosshair;touch-action:none}
   #zoomBar{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;z-index:2}
-  #zoomBar button{min-width:44px;min-height:40px;background:#0c0c12cc;border:1px solid #2a3d34;color:#00ff87;border-radius:8px;font-weight:800}
-  @media (min-width:1024px){
-    #board{height:min(82vh,920px);min-height:680px}
-  }
-  .ok{color:var(--g)} .bad{color:var(--p)} .warn{color:var(--y)}
+  #zoomBar button{min-width:40px;min-height:36px;background:#0c0c12cc;border:1px solid #2a3d34;color:#00ff87;border-radius:8px;font-weight:800}
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .tab{padding:8px 14px;border-radius:8px;border:1px solid #2a3d34;background:#0c0c12;color:#9fe8c8;cursor:pointer;font-size:12px;letter-spacing:.06em}
+  .tab.on{border-color:var(--g);color:var(--g);background:#0a1a12}
+  .page{display:none}
+  .page.on{display:block}
   .flag{border:1px solid #2a3d34;border-radius:8px;padding:8px 10px;margin:6px 0;font-size:13px}
   .flag.fail{border-color:#5a2038;background:#1a0a12}
   .flag.pass{border-color:#1e3a2f;background:#0b1410}
   .flag.warn{border-color:#4a3d10;background:#161208}
-  .lib-item{border:1px solid #2a3d34;border-radius:8px;padding:8px;cursor:pointer}
-  .lib-item:hover{border-color:var(--c)}
-  .nexus-stamp{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  @media print{
-    body{background:#fff;color:#111}
-    .no-print{display:none !important}
-    #board{border:1px solid #333;height:480px;min-height:480px}
-    .card{border-color:#ccc;background:#fff}
-    input,textarea,select{border-color:#999;color:#111;background:#fff}
-  }
+  .modal{position:fixed;inset:0;background:#000a;display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal.on{display:flex}
+  .modal-box{background:#111118;border:1px solid var(--g);border-radius:16px;max-width:520px;width:100%;padding:20px;max-height:90vh;overflow:auto}
+  @media print{.no-print{display:none !important} .page{display:block !important}}
 </style>
 </head>
 <body>
-<div class="max-w-6xl mx-auto p-3 pb-28">
-  <header class="nexus-stamp mb-4" data-brand="NExtended Xperimental USers">
+<div class="max-w-6xl mx-auto p-3 pb-24">
+  <header class="flex items-center justify-between mb-3">
     <div>
       <div class="chip mb-1">DoubleA · AntManThePro</div>
-      <h1 class="text-3xl font-black tracking-[.22em] glow m-0">NEXUS</h1>
-      <p class="m-0 text-[11px] tracking-[.16em] text-cyan-300">NExtended Xperimental USers</p>
-      <div class="text-[11px] text-pink-400 mt-1">DUCT AS-BUILT · NFPA 96 §4.6.4 FIELD KERNEL</div>
+      <h1 class="text-2xl md:text-3xl font-black tracking-[.18em] glow m-0">NEXUS DUCT v2</h1>
+      <p class="m-0 text-[11px] tracking-[.14em] text-cyan-300">NExtended Xperimental USers · NFPA 96 §4.6.4 FIELD KERNEL</p>
     </div>
-    <svg width="56" height="56" viewBox="0 0 64 64" aria-label="NEXUS sigil">
+    <svg width="56" height="56" viewBox="0 0 64 64" aria-label="NEXUS duct sigil" class="rounded-xl">
       <rect width="64" height="64" rx="14" fill="#0a0a0f" stroke="#00ff87" stroke-width="1.5"/>
-      <circle cx="32" cy="32" r="19" fill="none" stroke="#60efff" stroke-width="1.2"/>
-      <path d="M20 42 L32 14 L44 42 M25.5 32 H38.5" fill="none" stroke="#00ff87" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="32" cy="32" r="3.2" fill="#ff0080"/>
+      <path d="M32 10 L48 22 L48 30 L40 30 L40 48 L24 48 L24 30 L16 30 L16 22 Z" fill="none" stroke="#ff0080" stroke-width="1.5"/>
+      <path d="M32 30 Q32 42 40 50" fill="none" stroke="#00ff87" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="42" cy="52" r="3" fill="#60efff"/>
     </svg>
   </header>
 
@@ -71,947 +65,595 @@
     <span class="chip" id="libChip">0 SITES</span>
     <span class="chip" id="scoreChip">COMPLIANCE —</span>
     <span class="chip warn">FIELD AS-BUILT ≠ PERMIT SET</span>
+    <button class="chip" id="btnTutorial" style="cursor:pointer">▶ TUTORIAL</button>
   </div>
 
-  <div class="grid lg:grid-cols-[1.4fr_.8fr] gap-3">
-    <div>
-      <section class="card p-3 mb-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-xs tracking-widest text-cyan-300">SITE / JOB</div>
-          <div class="text-[10px] text-[#7aa89a] no-print">Owner packet first. If missing, this drawing becomes the product.</div>
-        </div>
-        <div class="grid sm:grid-cols-2 gap-2">
-          <div><label>Legal / DBA</label><input id="name" placeholder="Restaurant name"/></div>
-          <div><label>Address / suite</label><input id="addr" placeholder="Street, suite, city"/></div>
-          <div><label>AHJ / city</label><input id="ahj" placeholder="Dallas / Fort Worth / San Antonio"/></div>
-          <div><label>Tech / rover</label><input id="tech" placeholder="Your name"/></div>
-        </div>
-        <div class="grid grid-cols-3 gap-2">
-          <div><label>Hoods</label><input id="hoodCount" type="number" min="0" value="1"/></div>
-          <div><label>Fans</label><input id="fanCount" type="number" min="0" value="1"/></div>
-          <div><label>Cooking volume</label>
-            <select id="volume">
-              <option value="solid">Solid fuel — monthly inspect</option>
-              <option value="high">High volume — quarterly</option>
-              <option value="mod" selected>Moderate — semiannual</option>
-              <option value="low">Low / seasonal — annual</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid sm:grid-cols-2 gap-2">
-          <div><label>Duct material / gauge</label><input id="material" placeholder="16 ga black iron / stainless"/></div>
-          <div><label>Fan type</label>
-            <select id="fanType">
-              <option>Upblast</option>
-              <option>Industrial</option>
-              <option>In-line</option>
-              <option>PCU</option>
-              <option>Self-contained</option>
-              <option>Upblast hinged</option>
-              <option>Unknown</option>
-            </select>
-          </div>
-        </div>
-        <label>On-premises packet status (NFPA 96 §4.6.4)</label>
-        <select id="packet">
-          <option value="missing">Missing — GM has no drawing</option>
-          <option value="stale">Found but stale / not as-built</option>
-          <option value="permit">Permit set only (AHJ file / old design)</option>
-          <option value="present">Present on premises and usable</option>
-        </select>
-        <label>Path notes (hood → turns → fan)</label>
-        <textarea id="notes" rows="2" placeholder="Hood A wall canopy → 8ft rise → 90R → 22ft horiz no panels → upblast west roof"></textarea>
-      </section>
+  <div class="tabs no-print">
+    <button class="tab on" data-page="setup">1 · SETUP</button>
+    <button class="tab" data-page="describe">2 · DESCRIBE / MEASURE</button>
+    <button class="tab" data-page="map">3 · SYSTEM MAP</button>
+    <button class="tab" data-page="compliance">4 · COMPLIANCE</button>
+    <button class="tab" data-page="library">5 · LIBRARY</button>
+  </div>
 
-      <section class="card p-3 mb-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-xs tracking-widest text-cyan-300">ASSET = ONE EXHAUST SYSTEM</div>
-          <span class="chip">1 FAN PATH</span>
-        </div>
-        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">One fan path = one asset, even with several hoods on it. A second fan is a second asset.</p>
-        <div class="grid sm:grid-cols-2 gap-2">
-          <div><label>Line name</label><input id="lineName" placeholder="Blind Salamander"/></div>
-          <div><label>Client hood ref</label><input id="hoodRef" placeholder="KEC - Main Line"/></div>
-          <div><label>Region</label><input id="region" placeholder="Region 2 - Austin"/></div>
-          <div><label>Account type</label><input id="acctType" placeholder="Hotel"/></div>
-          <div><label>Hood length ft</label><input id="assetLen" type="number" min="0" step="0.5" placeholder="12"/></div>
-          <div><label>Collars</label><input id="assetCollars" type="number" min="0" step="1" placeholder="2"/></div>
-          <div><label>Baffle filters</label><input id="assetFilters" type="number" min="0" step="1" placeholder="6"/></div>
-          <div><label>Filter type</label><input id="filterType" placeholder="HE stainless"/></div>
-          <div><label>Common horiz ft</label><input id="assetHoriz" type="number" min="0" step="0.5" placeholder="8"/></div>
-          <div><label>Common access panels</label><input id="assetPanels" type="number" min="0" step="1" placeholder="2"/></div>
-          <div><label>Revenue / service</label><input id="revenue" type="number" min="0" step="1" placeholder="650"/></div>
-          <div><label>Frequency</label><input id="freq" placeholder="3 Months"/></div>
-          <div><label>Techs</label><input id="techs" type="number" min="1" step="1" placeholder="2"/></div>
-          <div><label>Hours</label><input id="hours" type="number" min="0" step="0.5" placeholder="3.5"/></div>
-        </div>
-        <label>Appliances left → right</label>
-        <input id="applLine" placeholder="Fryer, Flat Grill, Stove Top, Char Grill"/>
-        <label>TechPix / photo packet</label>
-        <input id="pix" placeholder="https://app.mytechpix.com/go/..."/>
-        <div class="grid grid-cols-2 gap-2 mt-2 no-print">
-          <button class="act" type="button" id="btnAddAsset">Add Asset</button>
-          <button class="ghost" type="button" id="btnAsset">Load Blind Salamander</button>
-        </div>
-        <div class="grid grid-cols-2 gap-2 mt-2 no-print">
-          <button class="ghost" type="button" id="btnAsset2">Add 2nd fan as new asset</button>
-          <button class="ghost" type="button" id="btnVoice">Replay demo walkthrough</button>
-        </div>
-        <div id="assetCard" class="text-[12px] text-[#9fe8c8] mt-2"></div>
-      </section>
+  <!-- SETUP -->
+  <div class="page on" id="page-setup">
+    <section class="card p-3 mb-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">SITE / JOB</div>
+      <div class="grid sm:grid-cols-2 gap-2">
+        <div><label>Legal / DBA</label><input id="name" placeholder="Restaurant name"/></div>
+        <div><label>Address</label><input id="address" placeholder="Street, City"/></div>
+        <div><label>AHJ / Inspector</label><input id="ahj" placeholder="Fire marshal / AHJ"/></div>
+        <div><label>Tech / Crew</label><input id="tech" placeholder="Your name"/></div>
+        <div><label>Hood count</label><input id="hoodCount" type="number" value="1" min="1"/></div>
+        <div><label>Fan type</label><select id="fanType"><option>Upblast</option><option>Utility</option><option>Inline</option><option>Unknown</option></select></div>
+        <div class="sm:col-span-2"><label>Notes</label><textarea id="notes" rows="2" placeholder="Access issues, solid fuel, grease buildup..."></textarea></div>
+      </div>
+    </section>
+    <section class="card p-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">ASSET = ONE EXHAUST SYSTEM</div>
+      <p class="text-sm text-[#9fe8c8]">One fan path = one asset. Multiple hoods on one fan stay on the same drawing. Second fan → new asset.</p>
+      <button class="act mt-3" id="btnAddAsset">ADD / UPDATE ASSET</button>
+    </section>
+  </div>
 
-      <section class="card p-3 mb-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="text-xs tracking-widest text-cyan-300">DESCRIBE THE RUN — WORDS DRAW THE MAP</div>
-          <span class="chip">TYPE IT</span>
-        </div>
-        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">One fan path is one asset, even with several hoods on it. Side-by-side, island front-and-back, four to eight hoods — same drawing until a second fan splits the duct. Say it like the roof.</p>
-        <textarea id="descInput" rows="5" placeholder="Main line hood 10 ft, back line hood 8 ft, 40 ft apart. Joining horizontal 100 ft, vertical two stories, horizontal 10 ft, vertical one story to the upblast fan."></textarea>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-2 no-print">
-          <button class="act" type="button" id="btnDescribe">Draw from words</button>
-          <button class="ghost" type="button" id="btnDescClear">Clear</button>
-          <button class="ghost" type="button" id="btnDescDemo1">Sample: Blind Salamander</button>
-          <button class="ghost" type="button" id="btnDescDemo2">Sample: collar → fan</button>
-        </div>
-        <div class="grid grid-cols-1 gap-2 mt-2 no-print">
-          <button class="ghost" type="button" id="btnDescDemo3">Sample: multi-hood, one fan</button>
-        </div>
-        <div id="descOut" class="text-[12px] text-[#9fe8c8] mt-2"></div>
-      </section>
+  <!-- DESCRIBE -->
+  <div class="page" id="page-describe">
+    <section class="card p-3 mb-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-1">DESCRIBE THE RUN — WORDS DRAW THE MAP</div>
+      <p class="text-[11px] text-[#7aa89a] mb-2">Type naturally. Auto-corrects common terms, synonyms, and light misspellings. "main hood 10ft then 40 feet of duct to the upblast" works.</p>
+      <textarea id="describe" rows="4" placeholder="Example: Main line hood 12 ft, 30 feet horizontal, two story rise, then 8 ft to the upblast fan. Access panels every 12 ft."></textarea>
+      <div class="flex gap-2 mt-2 flex-wrap">
+        <button class="act" id="btnDescribe">DRAW FROM WORDS</button>
+        <button class="ghost" id="btnSample">LOAD SAMPLE</button>
+      </div>
+      <div id="parsePreview" class="mt-2 text-xs text-cyan-300"></div>
+    </section>
+    <section class="card p-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">MEASURED DUCT PIECES</div>
+      <div class="grid grid-cols-3 gap-2">
+        <div><label>Type</label><select id="pieceType"><option>Horizontal</option><option>Vertical</option><option>45° Slant</option><option>90° Turn</option></select></div>
+        <div><label>Length (ft)</label><input id="pieceLen" type="number" value="10" min="1"/></div>
+        <div><label>Panels</label><input id="piecePanels" type="number" value="1" min="0"/></div>
+      </div>
+      <button class="act mt-2" id="btnAddPiece">ADD MEASURED PIECE</button>
+      <div id="pieceList" class="mt-2 text-sm"></div>
+    </section>
+  </div>
 
-      <section class="card p-3 mb-3">
-        <div class="text-xs tracking-widest text-cyan-300 mb-1">MEASURED DUCT — COLLAR LOOKING AT THE FAN</div>
-        <p class="text-[11px] text-[#7aa89a] m-0 mb-2">Each piece gets a length. 45 is a slant. 90 is a hard turn. Panels live on the piece you can open.</p>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 no-print">
-          <div>
-            <label>Piece</label>
-            <select id="ductKind">
-              <option value="V">Vertical</option>
-              <option value="S45">45 slant</option>
-              <option value="H">Horizontal</option>
-              <option value="U90">90 up</option>
-            </select>
-          </div>
-          <div><label>Length ft</label><input id="ductFt" type="number" min="0" step="0.5" value="4"/></div>
-          <div><label>Access panels</label><input id="ductPanels" type="number" min="0" step="1" value="0"/></div>
-          <div class="flex items-end"><button class="ghost w-full" type="button" id="btnAddDuct">Add measured piece</button></div>
+  <!-- MAP -->
+  <div class="page" id="page-map">
+    <section class="card p-3">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-xs tracking-widest text-cyan-300">SYSTEM MAP · CANVAS</div>
+        <div class="text-[10px] text-[#7aa89a]">Tap tool → tap canvas. Freehand for sketches.</div>
+      </div>
+      <div class="flex flex-wrap gap-1 mb-2" id="toolBar"></div>
+      <div id="boardWrap">
+        <canvas id="board" width="1600" height="1100"></canvas>
+        <div id="zoomBar">
+          <button id="zOut">−</button>
+          <button id="zFit">FIT</button>
+          <button id="zIn">+</button>
         </div>
-        <div class="grid grid-cols-2 gap-2 mt-2 no-print">
-          <button class="act" type="button" id="btnRun">Load collar → fan example</button>
-          <button class="ghost" type="button" id="btnFanEnd">Set fan on this asset</button>
-        </div>
-        <div id="tape" class="text-[12px] text-[#9fe8c8] mt-2"></div>
-      </section>
+      </div>
+      <div class="flex flex-wrap gap-1 mt-2">
+        <button class="ghost" id="btnConnect">CONNECT LAST TWO</button>
+        <button class="ghost" id="btnReverse">REVERSE FLOW</button>
+        <button class="ghost" id="btnUndo">UNDO</button>
+        <button class="ghost" id="btnClear">CLEAR MAP</button>
+        <button class="ghost" id="btnDemo">LOAD DEMO</button>
+        <button class="tool" id="btnFreehand">FREEHAND ON</button>
+      </div>
+    </section>
+  </div>
 
-      <section class="card p-3 mb-3">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-xs tracking-widest text-cyan-300">SYSTEM MAP</div>
-          <div class="text-[10px] text-[#7aa89a]" id="hint">Select a tool. Tap canvas to drop. Connect two nodes.</div>
-        </div>
-        <div class="flex flex-wrap gap-1 mb-2 no-print" id="tools"></div>
-        <div id="boardWrap">
-          <canvas id="board" width="1600" height="1100"></canvas>
-          <audio id="demoVoice" preload="none" src="demo-kitchen-voiceover.mp3"></audio>
-          <div id="zoomBar" class="no-print">
-            <button type="button" id="btnZoomOut" aria-label="Zoom out">−</button>
-            <button type="button" id="btnZoomFit" aria-label="Reset view">FIT</button>
-            <button type="button" id="btnZoomIn" aria-label="Zoom in">+</button>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2 no-print">
-          <button class="ghost" type="button" id="btnConnect">Connect last two</button>
-          <button class="ghost" type="button" id="btnReverse">Reverse flow</button>
-          <button class="ghost" type="button" id="btnUndo">Undo node</button>
-          <button class="ghost" type="button" id="btnClear">Clear map</button>
-          <button class="ghost" type="button" id="btnDemo">Load demo kitchen</button>
-        </div>
-        <div class="grid sm:grid-cols-4 gap-2 mt-2 no-print">
-          <div>
-            <label>Selected length (ft)</label>
-            <input id="lenFt" type="number" min="0" step="0.5" placeholder="Duct ft"/>
-          </div>
-          <div>
-            <label>Selected label</label>
-            <input id="selLabel" placeholder="Hood A / Collar / Fan-1"/>
-          </div>
-          <div>
-            <label>Collar size</label>
-            <input id="collarSize" placeholder="18x18 / 12 in rd"/>
-          </div>
-          <div class="flex items-end">
-            <button class="act w-full" type="button" id="btnApply">Apply to selected</button>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 mt-2 no-print">
-          <div>
-            <label>Hood type</label>
-            <select id="hoodStyle">
-              <option value="wall">Wall canopy</option>
-              <option value="bank">Side-by-side bank</option>
-              <option value="island">Island canopy</option>
-            </select>
-          </div>
-          <div>
-            <label>Hood length ft</label>
-            <input id="hoodW" type="number" min="3" max="40" step="0.5" placeholder="8"/>
-          </div>
-          <div>
-            <label>Hood depth ft</label>
-            <input id="hoodD" type="number" min="2" max="16" step="0.5" placeholder="4"/>
-          </div>
-          <div>
-            <label>Sections</label>
-            <input id="hoodBanks" type="number" min="1" max="8" step="1" placeholder="1"/>
-          </div>
-          <div class="flex items-end">
-            <button class="ghost w-full" type="button" id="btnAddHood">Add hood beside</button>
-          </div>
-        </div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mt-2 no-print">
-          <div>
-            <label>Appliance under hood</label>
-            <select id="applType"></select>
-          </div>
-          <div>
-            <label>Appliance width ft</label>
-            <input id="applW" type="number" min="1" max="12" step="0.5" placeholder="3"/>
-          </div>
-          <div class="flex items-end">
-            <button class="ghost w-full" type="button" id="btnAddAppl">Drop under selected hood</button>
-          </div>
-        </div>
-      </section>
+  <!-- COMPLIANCE -->
+  <div class="page" id="page-compliance">
+    <section class="card p-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">COMPLIANCE KERNEL · EXPANDED NFPA 96 CHECKS</div>
+      <div id="scoreBig" class="text-3xl font-black glow mb-2">—</div>
+      <div id="mathSummary" class="text-sm mb-3 text-cyan-300"></div>
+      <div id="flags"></div>
+      <p class="text-[10px] text-[#7aa89a] mt-3">Field as-built aid. Not a substitute for the adopted edition or AHJ judgment. Access panels ~12 ft horizontal, at direction changes, solid fuel monthly, upblast hinge kit, etc.</p>
+    </section>
+  </div>
+
+  <!-- LIBRARY -->
+  <div class="page" id="page-library">
+    <section class="card p-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">LIBRARY · SAVE / EXPORT</div>
+      <div class="flex gap-2 flex-wrap mb-3">
+        <button class="act" id="btnSave">SAVE SITE</button>
+        <button class="ghost" id="btnExport">EXPORT JSON</button>
+        <button class="ghost" id="btnPrint">PRINT / PDF PACKET</button>
+      </div>
+      <div id="libList"></div>
+    </section>
+  </div>
+</div>
+
+<!-- Tutorial Modal -->
+<div class="modal" id="tutorialModal">
+  <div class="modal-box">
+    <div class="flex justify-between items-center mb-3">
+      <div class="text-lg font-black glow">NEXUS DUCT TUTORIAL</div>
+      <button class="ghost" id="closeTut">✕</button>
     </div>
-
-    <div>
-      <section class="card p-3 mb-3">
-        <div class="text-xs tracking-widest text-cyan-300 mb-1">COMPLIANCE KERNEL</div>
-        <div class="text-[11px] text-[#7aa89a] mb-2">Field check against NFPA 96 access geometry + §4.6.4 packet duty. Not a substitute for the adopted edition or the AHJ.</div>
-        <div id="flags"></div>
-        <div class="text-[11px] mt-2" id="math"></div>
-      </section>
-
-      <section class="card p-3 mb-3">
-        <div class="text-xs tracking-widest text-cyan-300 mb-2">SELECTED NODE / PHOTO</div>
-        <div id="selBox" class="text-sm text-[#9fe8c8]">Nothing selected.</div>
-        <label class="no-print">Attach field photo (stored locally)</label>
-        <input class="no-print" id="photo" type="file" accept="image/*"/>
-        <div id="thumbs" class="grid grid-cols-3 gap-1 mt-2"></div>
-      </section>
-
-      <section class="card p-3 mb-3 no-print">
-        <div class="text-xs tracking-widest text-cyan-300 mb-2">LIBRARY</div>
-        <div class="grid grid-cols-2 gap-2 mb-2">
-          <button class="act" type="button" id="btnSave">Save site</button>
-          <button class="ghost" type="button" id="btnExport">Export JSON</button>
-        </div>
-        <button class="ghost w-full mb-2" type="button" id="btnPrint">Print / PDF packet</button>
-        <div id="lib" class="space-y-2 max-h-56 overflow-auto"></div>
-      </section>
-
-      <section class="card p-3 text-[12px] leading-relaxed text-[#9fe8c8]">
-        <div class="text-xs tracking-widest text-yellow-300 mb-1">WHO OWNS THIS DRAWING</div>
-        Architect/MEP usually keeps copyright on the permit set. Owner holds the license to use it for maintenance. NFPA 96 §4.6.4 puts a copy on the premises for the AHJ and any maintenance person — that is you. If they cannot produce it, document the gap and leave this field as-built in the binder.
-      </section>
+    <div id="tutStep" class="text-sm leading-relaxed"></div>
+    <div class="flex gap-2 mt-4">
+      <button class="ghost" id="tutPrev">PREV</button>
+      <button class="act" id="tutNext">NEXT / PLAY</button>
     </div>
+    <div class="text-[10px] text-[#7aa89a] mt-2" id="tutProgress"></div>
   </div>
 </div>
 
 <script>
-const PALETTE = {g:'#00ff87',c:'#60efff',p:'#ff0080',y:'#ffcc00'};
-const TYPES = [
-  {id:'hood', label:'Hood', color:PALETTE.g},
-  {id:'appl', label:'Appliance', color:'#ffb347'},
-  {id:'collar', label:'Collar', color:'#ff8ab8'},
-  {id:'elbow', label:'Elbow / turn', color:PALETTE.y},
-  {id:'ductH', label:'Horiz duct', color:PALETTE.c},
-  {id:'ductV', label:'Vert riser', color:PALETTE.c},
-  {id:'panel', label:'Access panel', color:PALETTE.p},
-  {id:'fan', label:'Fan', color:PALETTE.y},
-  {id:'hatch', label:'Roof / hatch', color:'#9ad7c0'},
-  {id:'select', label:'Select / move', color:'#fff'}
-];
-const APPLIANCES = [
-  {id:'range', label:'Range', wFt:3, load:'mod'},
-  {id:'griddle', label:'Griddle', wFt:3, load:'mod'},
-  {id:'fryer', label:'Fryer bank', wFt:2.5, load:'high'},
-  {id:'char', label:'Charbroiler', wFt:3, load:'high'},
-  {id:'wok', label:'Wok / ethnic', wFt:3, load:'high'},
-  {id:'oven', label:'Oven', wFt:3.5, load:'low'},
-  {id:'pizza', label:'Conveyor pizza', wFt:5, load:'mod'},
-  {id:'salamander', label:'Salamander', wFt:3, load:'mod'},
-  {id:'tilt', label:'Tilt skillet', wFt:4, load:'mod'},
-  {id:'kettle', label:'Steam kettle', wFt:3, load:'low'},
-  {id:'steamer', label:'Steamer', wFt:2.5, load:'low'},
-  {id:'solid', label:'Solid fuel', wFt:4, load:'solid'}
-];
-const LOAD_RANK = {solid:4, high:3, mod:2, low:1};
-
-const KEY = 'nexus_duct_asbuilt_v1';
+// ========== STATE ==========
+const state = {
+  nodes: [], edges: [], pieces: [], site: {},
+  tool: 'hood', freehand: false, freehandPaths: []
+};
+let cam = {s:1, x:40, y:40};
+let selected = null;
+let dragging = null;
+let drawing = false;
+let currentPath = [];
 const canvas = document.getElementById('board');
 const ctx = canvas.getContext('2d');
 
-let state = blank();
-let tool = 'hood';
-let selected = null;
-let dragging = null;
-let lastId = null;
-let cam = {s:1.35, x:0, y:0};
-let pinch = null;
+function uid(){ return Math.random().toString(36).slice(2,9); }
 
-function uid(){ return 'n' + Math.random().toString(36).slice(2,9); }
-function blank(){
+// ========== FUZZY / AUTO-CORRECT LANGUAGE ==========
+const SYNONYMS = {
+  hood: ['hood','kitchin','kitchen hood','exhaust hood','range hood','canopy'],
+  fan: ['fan','upblast','up blast','utility fan','blower','exhaust fan'],
+  vertical: ['vertical','rise','stories','story','up','stack'],
+  horizontal: ['horizontal','run','duct','length','straight'],
+  collar: ['collar','transition','boot'],
+  panel: ['panel','access','cleanout','door'],
+  ft: ['ft','feet','foot','\'']
+};
+
+function normalize(text){
+  let t = text.toLowerCase().replace(/[^a-z0-9\s']/g,' ').replace(/\s+/g,' ');
+  t = t.replace(/kitchin|kitchn|exhausr|upblastt|horzontal|vertcal/g, m => ({
+    kitchin:'kitchen', kitchn:'kitchen', exhausr:'exhaust', upblastt:'upblast',
+    horzontal:'horizontal', vertcal:'vertical'
+  }[m]||m));
+  return t;
+}
+
+function descNum(raw){
+  const map = {one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,
+    eleven:11,twelve:12,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+  let n = parseFloat(raw);
+  if (!isNaN(n)) return n;
+  for (const [k,v] of Object.entries(map)) if (raw.includes(k)) return v;
+  return 0;
+}
+
+function parseDescribe(text){
+  const t = normalize(text);
+  const out = {hoods:[], ducts:[], fan:'upblast', panels:0, warnings:[]};
+  const hoodMatches = t.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|twenty)\s*(ft|feet|')?\s*(main|back|line|hood)/g) || [];
+  hoodMatches.forEach(m => {
+    const num = descNum(m);
+    if (num) out.hoods.push({len:num, label: m.includes('main')?'Main':'Line'});
+  });
+  if (!out.hoods.length && t.includes('hood')) out.hoods.push({len:10, label:'Main'});
+  const runs = t.match(/(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)\s*(ft|feet|')?\s*(horizontal|vertical|rise|stories|story|slant|45|90)/g) || [];
+  runs.forEach(r => {
+    const num = descNum(r);
+    let kind = 'horizontal';
+    if (r.includes('vertical')||r.includes('rise')||r.includes('stor')) kind = 'vertical';
+    if (r.includes('slant')||r.includes('45')) kind = 'slant';
+    if (r.includes('90')) kind = '90';
+    if (num) out.ducts.push({kind, len: kind==='vertical' && r.includes('stor') ? num*12 : num});
+  });
+  if (t.includes('upblast')||t.includes('up blast')) out.fan = 'upblast';
+  if (t.includes('panel')||t.includes('access')) out.panels = 1;
+  if (!out.ducts.length) out.warnings.push('No clear duct runs found — added defaults');
+  return out;
+}
+
+// ========== CANVAS (single canvas, proper touch) ==========
+function sizeCanvas(){
+  const wrap = document.getElementById('boardWrap');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  canvas.width = Math.floor(w * dpr);
+  canvas.height = Math.floor(h * dpr);
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  draw();
+}
+
+function toLocal(clientX, clientY){
+  const r = canvas.getBoundingClientRect();
   return {
-    id: uid(),
-    savedAt: null,
-    name:'', addr:'', ahj:'', tech:'',
-    hoodCount:1, fanCount:1, volume:'mod',
-    material:'', fanType:'Upblast hinged', packet:'missing', notes:'',
-    nodes:[], edges:[],
-    photos:{}
+    x: (clientX - r.left - cam.x) / cam.s,
+    y: (clientY - r.top - cam.y) / cam.s
   };
 }
 
-function $(id){ return document.getElementById(id); }
-function formToState(){
-  state.name = $('name').value.trim();
-  state.addr = $('addr').value.trim();
-  state.ahj = $('ahj').value.trim();
-  state.tech = $('tech').value.trim();
-  state.hoodCount = +$('hoodCount').value || 0;
-  state.fanCount = +$('fanCount').value || 0;
-  state.volume = $('volume').value;
-  state.material = $('material').value.trim();
-  state.fanType = $('fanType').value;
-  state.packet = $('packet').value;
-  state.notes = $('notes').value;
-}
-function stateToForm(){
-  $('name').value = state.name;
-  $('addr').value = state.addr;
-  $('ahj').value = state.ahj;
-  $('tech').value = state.tech;
-  $('hoodCount').value = state.hoodCount;
-  $('fanCount').value = state.fanCount;
-  $('volume').value = state.volume;
-  state.material = state.material;
-  state.fanType = state.fanType;
-  state.packet = state.packet;
-  state.notes = state.notes;
-}
-
-function tools(){
-  const box = $('tools'); box.innerHTML = '';
-  TYPES.forEach(t => {
-    const b = document.createElement('button'); b.type='button';
-    b.className = 'tool' + (tool===t.id ? ' on' : '');
-    b.textContent = t.label.toUpperCase();
-    b.onclick = () => { tool = t.id; tools(); $('hint').textContent = hintFor(t.id); };
-    box.appendChild(b);
-  });
-  if(!document.getElementById('applType').options.length){
-    APPLIANCES.forEach(a=>{
-      const o=document.createElement('option'); o.value=a.id; o.textContent=a.label.toUpperCase()+' · '+a.load.toUpperCase(); document.getElementById('applType').appendChild(o);
-    });
-    document.getElementById('applType').value='fryer';
-    document.getElementById('applW').value=2.5;
-  }
-}
-function hintFor(id){
-  return ({hood:'Drop a canopy. Set wall/bank/island, length x depth, Add hood beside.',appl:'Pick type, tap under a hood.',collar:'Drop at hood outlet or fan inlet. Set size.',elbow:'Drop every change of direction.',ductH:'Drop midpoint on a horizontal run, set length.',ductV:'Drop the riser.',panel:'Drop on the run. Horizontal target: opening every 12 ft.',fan:'Drop the exhaust fan.',hatch:'Roof hatch / ladder landing.',select:'Drag nodes. Empty space pans. Pinch or +/- to zoom.'})[id]||'';
-}
-
-function nodeAt(x,y,r){
-  r=r||28;
-  for(let i=state.nodes.length-1;i>=0;i--){
-    const n=state.nodes[i];
-    if(n.type==='appl'){ const R=applRect(n); if(x>=R.x&&x<=R.x+R.w&&y>=R.y&&y<=R.y+R.h) return n; }
-    else if(n.type==='hood'){ const R=hoodRect(n); if(x>=R.x&&x<=R.x+R.w&&y>=R.y&&y<=R.y+R.h) return n; }
-    else { const dx=n.x-x, dy=n.y-y; if(dx*dx+dy*dy<=r*r) return n; }
+function hitNode(x, y){
+  for (let i = state.nodes.length - 1; i >= 0; i--) {
+    const n = state.nodes[i];
+    const dx = x - n.x, dy = y - n.y;
+    if (n.type === 'hood' && Math.abs(dx) < 42 && Math.abs(dy) < 20) return n;
+    if (n.type === 'fan' && Math.hypot(dx, dy) < 26) return n;
+    if (Math.hypot(dx, dy) < 18) return n;
   }
   return null;
-}
-function edgeAt(x,y){
-  let best=null,bestD=16;
-  state.edges.forEach(e=>{
-    const a=byId(e.from), b=byId(e.to); if(!a||!b) return;
-    const d=distToSeg(x,y,a.x,a.y,b.x,b.y); if(d<bestD){bestD=d;best=e;}
-  });
-  return best;
-}
-function byId(id){ return state.nodes.find(n=>n.id===id); }
-function hoodGeom(n){
-  const style=n.hoodStyle||'wall'; const banks=Math.max(1,+(n.banks||1));
-  const wFt=Math.max(3,+(n.wFt||(style==='island'?12:style==='bank'?16:8)));
-  const dFt=Math.max(2,+(n.dFt||(style==='island'?8:4)));
-  const px=16; return {style,banks,wFt,dFt,w:wFt*px,d:dFt*px,px};
-}
-function hoodRect(n){ const g=hoodGeom(n); return {x:n.x-g.w/2,y:n.y-g.d/2,w:g.w,h:g.d}; }
-function hoodHandle(n){ const R=hoodRect(n); return {x:R.x+R.w-10,y:R.y+R.h-10}; }
-function applSpec(n){ return APPLIANCES.find(a=>a.id===n.appl)||APPLIANCES[0]; }
-function applGeom(n){ const s=applSpec(n); const w=Math.max(1,+(n.wFt||s.wFt))*16; const d=Math.max(1,+(n.dFt||2.4))*16; return {w,d}; }
-function applRect(n){ const g=applGeom(n); return {x:n.x-g.w/2,y:n.y-g.d/2,w:g.w,h:g.d}; }
-function nearestHood(x,y){
-  let best=null,bestD=1e9;
-  state.nodes.filter(n=>n.type==='hood').forEach(h=>{
-    const R=hoodRect(h); const cx=R.x+R.w/2, cy=R.y+R.h/2;
-    const d=(cx-x)*(cx-x)+(cy-y)*(cy-y); if(d<bestD){bestD=d;best=h;}
-  });
-  return best;
-}
-function snapApplToHood(n){
-  const h=byId(n.parentHood)||nearestHood(n.x,n.y); if(!h) return;
-  n.parentHood=h.id;
-  const R=hoodRect(h); const sibs=state.nodes.filter(a=>a.type==='appl'&&a.parentHood===h.id&&a.id!==n.id);
-  let x=R.x+20; sibs.forEach(a=>{ const ar=applRect(a); x=Math.max(x,ar.x+ar.w+8); });
-  n.x=Math.min(x,R.x+R.w-applGeom(n).w/2-4); n.y=R.y+R.h+10;
-}
-function distToSeg(x,y,x1,y1,x2,y2){
-  const dx=x2-x1, dy=y2-y1; const len=dx*dx+dy*dy||1;
-  let t=((x-x1)*dx+(y-y1)*dy)/len; t=Math.max(0,Math.min(1,t));
-  const px=x1+t*dx, py=y1+t*dy; return Math.hypot(x-px,y-py);
-}
-function toLocal(clientX,clientY){
-  const r=canvas.getBoundingClientRect();
-  return {x:(clientX-r.left)/cam.s-cam.x/cam.s, y:(clientY-r.top)/cam.s-cam.y/cam.s};
-}
-function screenMid(){ const r=canvas.getBoundingClientRect(); return {x:r.width/2,y:r.height/2}; }
-function sizeCanvas(){
-  const r=canvas.getBoundingClientRect(); const dpr=Math.min(window.devicePixelRatio||1,2);
-  canvas.width=Math.round(r.width*dpr); canvas.height=Math.round(r.height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); draw();
-}
-function zoomBy(f){ cam.s=Math.max(0.4,Math.min(4,cam.s*f)); draw(); }
-function defaultLabel(type){
-  const n=state.nodes.filter(x=>x.type===type).length+1;
-  return ({hood:'Hood ',appl:'Appl ',collar:'Collar ',elbow:'Elbow ',ductH:'Duct ',ductV:'Riser ',panel:'AP-',fan:'Fan-',hatch:'Hatch '})[type]+n;
-}
-function makeAppl(x,y){
-  const id=$('applType').value; const spec=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
-  const wFt=+$('applW').value||spec.wFt;
-  return {id:uid(),type:'appl',x,y,label:spec.label,appl:id,wFt,dFt:2.4,parentHood:null};
-}
-function addEdge(from,to,axis,kind,len){
-  state.edges.push({id:uid(),from,to,axis:axis||'H',kind:kind||null,lengthFt:len||0,panels:0});
-}
-function travelDir(e){
-  const a=byId(e.from), b=byId(e.to); if(!a||!b) return '';
-  const dx=b.x-a.x, dy=b.y-a.y;
-  if(Math.abs(dx)>Math.abs(dy)) return dx>0?'EAST':'WEST';
-  return dy<0?'UP':'DOWN';
-}
-function drawArrow(x1,y1,x2,y2,t,color){
-  const ang=Math.atan2(y2-y1,x2-x1);
-  const mx=x1+(x2-x1)*t, my=y1+(y2-y1)*t;
-  ctx.save(); ctx.translate(mx,my); ctx.rotate(ang); ctx.strokeStyle=color; ctx.lineWidth=2;
-  ctx.beginPath(); ctx.moveTo(-7,-4); ctx.lineTo(0,0); ctx.lineTo(-7,4); ctx.stroke(); ctx.restore();
-}
-function drawHood(n,on){
-  const g=hoodGeom(n); const R=hoodRect(n);
-  ctx.beginPath(); ctx.rect(R.x,R.y,R.w,R.h); ctx.fill(); ctx.stroke();
-  if(g.style==='island'){
-    ctx.beginPath(); ctx.moveTo(R.x+R.w/2,R.y); ctx.lineTo(R.x+R.w/2,R.y+R.h); ctx.strokeStyle=PALETTE.p; ctx.stroke(); ctx.strokeStyle=(TYPES.find(t=>t.id==='hood')||{}).color;
-  }
-  if(g.banks>1){
-    for(let i=1;i<g.banks;i++){
-      const x=R.x+R.w*i/g.banks; ctx.beginPath(); ctx.moveTo(x,R.y); ctx.lineTo(x,R.y+R.h); ctx.strokeStyle='#3aa88a'; ctx.stroke(); ctx.strokeStyle=(TYPES.find(t=>t.id==='hood')||{}).color;
-    }
-  }
-  ctx.fillStyle='#0a0a0f'; ctx.textAlign='center'; ctx.font='13px ui-monospace,monospace';
-  ctx.fillText(n.label,R.x+R.w/2,R.y-8);
-  ctx.font='11px ui-monospace,monospace'; ctx.fillStyle='#7aa89a';
-  ctx.fillText(g.wFt+"' x "+g.dFt+"'"+(g.style==='bank'?' BANK '+g.banks:g.style==='island'?' ISLAND':''),R.x+R.w/2,R.y+R.h+16);
-  if(on){ ctx.fillStyle=PALETTE.y; ctx.beginPath(); ctx.arc(hoodHandle(n).x,hoodHandle(n).y,6,0,Math.PI*2); ctx.fill(); }
-}
-function drawAppl(n,on){
-  const R=applRect(n); const col=on?PALETTE.y:(TYPES.find(t=>t.id==='appl')||{}).color;
-  ctx.fillStyle='#0a0a0f'; ctx.strokeStyle=col; ctx.lineWidth=on?4:3;
-  ctx.beginPath(); ctx.rect(R.x,R.y,R.w,R.h); ctx.fill(); ctx.stroke();
-  ctx.fillStyle='#e8fff4'; ctx.textAlign='center'; ctx.font='12px ui-monospace,monospace';
-  ctx.fillText(n.label,R.x+R.w/2,R.y+R.h/2+4);
-  const sp=applSpec(n); ctx.font='10px ui-monospace,monospace'; ctx.fillStyle=sp.load==='high'||sp.load==='solid'?PALETTE.p:sp.load==='mod'?PALETTE.y:PALETTE.c;
-  ctx.fillText(sp.load.toUpperCase()+' · '+n.wFt+"'",R.x+R.w/2,R.y+R.h+14);
 }
 
 function draw(){
-  const w=canvas.width,h=canvas.height;
-  ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,w,h); ctx.fillStyle='#07070b'; ctx.fillRect(0,0,w,h);
-  ctx.setTransform(cam.s,0,0,cam.s,cam.x,cam.y);
-  const gw=w/cam.s+80, gh=h/cam.s+80;
-  ctx.strokeStyle='rgba(0,255,135,0.07)'; ctx.lineWidth=1/cam.s;
-  const ox=Math.floor(-cam.x/cam.s/40)*40-40, oy=Math.floor(-cam.y/cam.s/40)*40-40;
-  for(let x=ox;x<ox+gw;x+=40){ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy+gh);ctx.stroke();}
-  for(let y=oy;y<oy+gh;y+=40){ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+gw,y);ctx.stroke();}
-  ctx.font='16px ui-monospace,monospace';
-  state.edges.forEach(e=>{
-    const a=byId(e.from), b=byId(e.to); if(!a||!b) return;
-    const on=selected&&selected.id===e.id;
-    ctx.strokeStyle=on?PALETTE.y:(e.axis==='V'?PALETTE.c:'#3aa88a'); ctx.lineWidth=on?7:5;
-    ctx.shadowColor=ctx.strokeStyle; ctx.shadowBlur=on?18:10;
-    ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.shadowBlur=0;
-    drawArrow(a.x,a.y,b.x,b.y,0.38,on?PALETTE.y:PALETTE.c);
-    drawArrow(a.x,a.y,b.x,b.y,0.78,on?PALETTE.y:PALETTE.c);
-    const mx=(a.x+b.x)/2, my=(a.y+b.y)/2; const dir=travelDir(e);
-    ctx.fillStyle='#0a0a0f'; ctx.fillRect(mx-78,my-14,156,28);
-    ctx.fillStyle=on?PALETTE.y:'#cfeee0'; ctx.textAlign='center'; ctx.font='14px ui-monospace,monospace';
-    ctx.fillText((e.lengthFt||0)+"' "+(e.kind||e.axis)+' '+dir+(e.panels?(' · '+e.panels+' AP'):''),mx,my+5);
+  const w = canvas.width / (window.devicePixelRatio || 1);
+  const h = canvas.height / (window.devicePixelRatio || 1);
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.translate(cam.x, cam.y);
+  ctx.scale(cam.s, cam.s);
+
+  // grid
+  ctx.strokeStyle = '#1e3a2f';
+  ctx.lineWidth = 0.5 / cam.s;
+  const step = 40;
+  const left = -cam.x / cam.s - 100, right = left + w / cam.s + 200;
+  const top = -cam.y / cam.s - 100, bottom = top + h / cam.s + 200;
+  for (let x = Math.floor(left / step) * step; x < right; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, top); ctx.lineTo(x, bottom); ctx.stroke();
+  }
+  for (let y = Math.floor(top / step) * step; y < bottom; y += step) {
+    ctx.beginPath(); ctx.moveTo(left, y); ctx.lineTo(right, y); ctx.stroke();
+  }
+
+  // freehand paths (same coordinate space)
+  ctx.strokeStyle = '#ff0080';
+  ctx.lineWidth = 3 / cam.s;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  state.freehandPaths.forEach(path => {
+    if (path.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(path[0].x, path[0].y);
+    for (let i = 1; i < path.length; i++) ctx.lineTo(path[i].x, path[i].y);
+    ctx.stroke();
   });
-  state.nodes.forEach(n=>{
-    const on=selected&&selected.id===n.id; const col=(TYPES.find(t=>t.id===n.type)||{}).color||PALETTE.g;
-    ctx.shadowColor=col; ctx.shadowBlur=on?22:12; ctx.fillStyle='#0a0a0f'; ctx.strokeStyle=col; ctx.lineWidth=on?4:3;
-    if(n.type==='hood') drawHood(n,on);
-    else if(n.type==='appl') drawAppl(n,on);
-    else if(n.type==='collar'){
-      ctx.beginPath(); ctx.moveTo(n.x-22,n.y-10); ctx.lineTo(n.x+22,n.y-10); ctx.lineTo(n.x+16,n.y+12); ctx.lineTo(n.x-16,n.y+12); ctx.closePath(); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(n.x-10,n.y-4); ctx.lineTo(n.x+10,n.y-4); ctx.stroke();
-    } else if(n.type==='fan'){
-      ctx.beginPath(); ctx.arc(n.x,n.y,18,0,Math.PI*2); ctx.fill(); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(n.x-9,n.y); ctx.lineTo(n.x+9,n.y); ctx.moveTo(n.x,n.y-9); ctx.lineTo(n.x,n.y+9); ctx.stroke();
-    } else if(n.type==='panel'){
-      ctx.beginPath(); ctx.rect(n.x-14,n.y-14,28,28); ctx.fill(); ctx.stroke();
+  if (currentPath.length > 1) {
+    ctx.beginPath();
+    ctx.moveTo(currentPath[0].x, currentPath[0].y);
+    for (let i = 1; i < currentPath.length; i++) ctx.lineTo(currentPath[i].x, currentPath[i].y);
+    ctx.stroke();
+  }
+
+  // edges
+  state.edges.forEach(e => {
+    const a = state.nodes.find(n => n.id === e.from);
+    const b = state.nodes.find(n => n.id === e.to);
+    if (!a || !b) return;
+    ctx.strokeStyle = '#60efff';
+    ctx.lineWidth = 4 / cam.s;
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+    const ang = Math.atan2(b.y - a.y, b.x - a.x);
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(ang);
+    ctx.fillStyle = '#00ff87';
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-14, -6); ctx.lineTo(-14, 6); ctx.fill();
+    ctx.restore();
+  });
+
+  // nodes
+  state.nodes.forEach(n => {
+    ctx.fillStyle = n.type === 'hood' ? '#ff0080' : n.type === 'fan' ? '#ffcc00' : '#00ff87';
+    ctx.strokeStyle = selected === n.id ? '#fff' : '#60efff';
+    ctx.lineWidth = 2 / cam.s;
+    if (n.type === 'hood') {
+      ctx.fillRect(n.x - 40, n.y - 18, 80, 36);
+      ctx.strokeRect(n.x - 40, n.y - 18, 80, 36);
+    } else if (n.type === 'fan') {
+      ctx.beginPath(); ctx.arc(n.x, n.y, 22, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     } else {
-      ctx.beginPath(); ctx.arc(n.x,n.y,15,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillRect(n.x - 12, n.y - 12, 24, 24);
+      ctx.strokeRect(n.x - 12, n.y - 12, 24, 24);
     }
-    ctx.shadowBlur=0;
-    if(n.type!=='hood'&&n.type!=='appl'){
-      ctx.fillStyle='#e8fff4'; ctx.textAlign='center'; ctx.font='15px ui-monospace,monospace';
-      ctx.fillText(n.label||n.type,n.x,n.y+34);
-    }
-    if(n.type==='collar'&&n.size){ ctx.fillStyle=PALETTE.p; ctx.font='12px ui-monospace,monospace'; ctx.fillText(n.size,n.x,n.y+48); }
+    ctx.fillStyle = '#e8fff4';
+    ctx.font = (11 / cam.s) + 'px system-ui';
+    ctx.fillText(n.label || n.type, n.x - 20, n.y + 4);
   });
-  ctx.setTransform(1,0,0,1,0,0);
+
+  ctx.restore();
 }
 
-function neighbors(id){ const s=new Set(); state.edges.forEach(e=>{ if(e.from===id)s.add(e.to); if(e.to===id)s.add(e.from); }); return [...s]; }
+// Pointer handling with capture (works on iOS)
+function onPointerDown(e){
+  e.preventDefault();
+  canvas.setPointerCapture(e.pointerId);
+  const p = toLocal(e.clientX, e.clientY);
 
-function audit(){
-  formToState(); const flags=[];
-  const panels=state.nodes.filter(n=>n.type==='panel'), hoods=state.nodes.filter(n=>n.type==='hood'), fans=state.nodes.filter(n=>n.type==='fan'), elbows=state.nodes.filter(n=>n.type==='elbow'), collars=state.nodes.filter(n=>n.type==='collar'), appls=state.nodes.filter(n=>n.type==='appl');
-  if(state.packet==='missing') flags.push({lvl:'fail',code:'§4.6.4',text:'No exhaust drawing on the premises. Owner duty. Produce this field as-built and leave a copy in the hood binder.'});
-  else if(state.packet==='stale'||state.packet==='permit') flags.push({lvl:'warn',code:'§4.6.4',text:'Packet exists but is not a live as-built. Treat permit sets as suspect until field-verified.'});
-  else flags.push({lvl:'pass',code:'§4.6.4',text:'On-premises packet reported present. Still verify it matches the metal you can see.'});
-  if(!hoods.length) flags.push({lvl:'fail',code:'MAP',text:'No hood placed. Start at the canopy.'});
-  if(!fans.length) flags.push({lvl:'fail',code:'MAP',text:'No fan placed. The run is not complete until the roof termination is on the map.'});
-  if(state.nodes.length&&!state.edges.length) flags.push({lvl:'warn',code:'MAP',text:'Nodes exist with no connections. Use Connect last two or drop in chain order.'});
-  hoods.forEach(h=>{
-    const g=hoodGeom(h);
-    const near=collars.filter(c=>{ const R=hoodRect(h); return c.x>=R.x-20&&c.x<=R.x+R.w+20&&c.y>=R.y-40&&c.y<=R.y+R.h+40; });
-    const wired=neighbors(h.id).filter(id=>(byId(id)||{}).type==='collar'); const count=Math.max(near.length,wired.length);
-    const need=g.style==='island'?Math.max(2,g.banks):Math.max(1,g.banks);
-    if(count<need) flags.push({lvl:'fail',code:'COLLAR',text:h.label+' ('+g.style+', '+g.banks+' section'+(g.banks>1?'s':'')+') needs '+need+' collar(s). Field shows '+count+'.'});
-    const under=appls.filter(a=>a.parentHood===h.id); if(!under.length) flags.push({lvl:'warn',code:'LINE',text:h.label+' has no appliances mapped underneath. Grease load is a guess until the cook line is on the drawing.'});
-  });
-  let peak='low'; appls.forEach(a=>{ const spec=applSpec(a); if((LOAD_RANK[spec.load]||0)>(LOAD_RANK[peak]||0)) peak=spec.load; if(!a.parentHood) flags.push({lvl:'warn',code:'LINE',text:a.label+' is not snapped under a hood.'}); });
-  if(appls.length){
-    const want=peak==='solid'?'solid':peak==='high'?'high':peak==='low'?'low':'mod';
-    if(state.volume!==want) flags.push({lvl:'warn',code:'FREQ',text:'Cook line peak load is '+peak.toUpperCase()+'. Site volume is '+state.volume+'. NFPA 96 inspect: solid=monthly, high=quarterly, mod=semiannual, low=annual.'});
-    else flags.push({lvl:'pass',code:'FREQ',text:'Peak appliance load '+peak.toUpperCase()+' matches site volume. Inspect cadence should follow that class.'});
-    if(peak==='solid') flags.push({lvl:'fail',code:'SOLID',text:'Solid fuel under a hood. Monthly inspect + spark arrestor / dedicated run check. Do not treat like a fryer bank.'});
-  }
-  if(state.asset){
-    const a=state.asset; const hot=(a.appl||[]).some(x=>/fry|char|wok/i.test(x));
-    if(hot&&state.volume==='mod') flags.push({lvl:'fail',code:'ASSET',text:'CRM cooking volume is Moderate, but the line is Fryer + Char. That is high-volume. 3-month frequency matches high, the volume field does not.'});
-    if(a.hinge&&!a.belt) flags.push({lvl:'warn',code:'FAN',text:'Hinge kit checked with no size. Confirm hinge kit type before the roof.'});
-    if(a.belt&&/upblast/i.test(a.fan||'')) flags.push({lvl:'warn',code:'FAN',text:'Upblast with belt size '+a.belt+'. Most upblasts are direct drive. Confirm it is not a utility set mislabeled.'});
-    if((a.panels||0)>0) flags.push({lvl:'pass',code:'ACCESS',text:a.panels+' common-duct access panels on the asset card. Still photograph each one.'});
-    if(a.pix) flags.push({lvl:'pass',code:'PIX',text:'TechPix packet linked. Photos are not a diagram — keep both.'});
-  }
-  collars.forEach(c=>{ if(!c.size) flags.push({lvl:'warn',code:'COLLAR',text:c.label+' has no size. Record 18x18, 12" rd, or whatever is in the metal.'}); });
-  fans.forEach(f=>{ const inbound=state.edges.some(e=>e.to===f.id); if(!inbound) flags.push({lvl:'warn',code:'FLOW',text:f.label+' is not the downstream end of any run. Arrows should point toward the fan.'}); });
-  state.edges.forEach(e=>{
-    const a=byId(e.from), b=byId(e.to); if(!a||!b) return;
-    if(a.type==='fan'&&b.type!=='fan') flags.push({lvl:'fail',code:'FLOW',text:'Flow on '+a.label+' → '+b.label+' is pointing away from the fan. Reverse it.'});
-    if(b.type==='hood'&&a.type!=='hood') flags.push({lvl:'fail',code:'FLOW',text:'Flow on '+a.label+' → '+b.label+' is pointing back into the hood. Reverse it.'});
-  });
-  elbows.forEach(el=>{ const near=panels.some(p=>Math.hypot(p.x-el.x,p.y-el.x)<70); if(!near) flags.push({lvl:'fail',code:'ACCESS',text:el.label+' has no access panel near the change of direction.'}); });
-  let horizFt=0,vertFt=0,missingSlots=0;
-  state.edges.forEach(e=>{
-    const a=byId(e.from), b=byId(e.to); if(!a||!b) return; const len=+e.lengthFt||0;
-    if(e.axis==='H') horizFt+=len; else vertFt+=len;
-    if(e.axis==='H'&&len>0){ const need=Math.max(1,Math.ceil(len/12)); const onRun=panels.filter(p=>distToSeg(p.x,p.y,a.x,a.y,b.x,b.y)<28).length; const counted=Math.max(onRun,+(e.panels||0)); if(counted<need){ missingSlots+=(need-counted); flags.push({lvl:'fail',code:'12-FT',text:a.label+' → '+b.label+' is '+len+' ft horizontal with '+counted+' panel(s). Target ~every 12 ft ('+need+' opening(s)).'}); } }
-    if((e.kind==='S45'||e.kind==='U90')&&!(+e.panels)&&!panels.some(p=>distToSeg(p.x,p.y,a.x,a.y,b.x,b.y)<40)) flags.push({lvl:'warn',code:'TURN',text:(e.kind)+' '+a.label+' → '+b.label+' has no access at the change of direction.'});
-  });
-  fans.forEach(f=>{ if(!/upblast/i.test(state.fanType)) flags.push({lvl:'warn',code:'FAN',text:f.label+' is not marked as a hinged upblast. Confirm hinge kit + grease containment.'}); });
-  if(!state.name||!state.addr) flags.push({lvl:'warn',code:'RECORD',text:'Site name/address incomplete. A drawing without a legal address is not a packet.'});
-  const fail=flags.filter(f=>f.lvl==='fail').length, warn=flags.filter(f=>f.lvl==='warn').length;
-  const score=Math.max(0,100-fail*18-warn*6);
-  $('scoreChip').textContent='COMPLIANCE '+score; $('scoreChip').className='chip'+(fail?' bad':warn?' warn':'');
-  $('libChip').textContent=library().length+' SITES';
-  $('flags').innerHTML=flags.map(f=>'<div class="flag '+f.lvl+'"><b class="'+(f.lvl==='fail'?'bad':f.lvl==='warn'?'warn':'ok')+'">'+f.code+'</b> — '+f.text+'</div>').join('')||'<div class="flag pass">No flags yet. Build the path.</div>';
-  $('math').innerHTML='Mapped horiz <b class="ok">'+horizFt+' ft</b> · vert <b class="ok">'+vertFt+' ft</b> · collars <b class="ok">'+collars.length+'</b> · appliances <b class="ok">'+appls.length+'</b> · peak load <b class="'+(appls.length?(peak==='solid'||peak==='high'?'bad':'ok'):'')+'">'+(appls.length?peak:'—').toUpperCase()+'</b> · panels <b class="ok">'+panels.length+'</b> · missing 12-ft slots <b class="'+(missingSlots?'bad':'ok')+'">'+missingSlots+'</b>';
-  return {score,flags,horizFt,vertFt,panels:panels.length,missingSlots};
-}
-
-function syncSel(){
-  if(!selected){ $('selBox').textContent='Nothing selected.'; return; }
-  const n=selected;
-  let html='<b>'+n.label+'</b> · '+n.type;
-  if(n.type==='hood'){ const g=hoodGeom(n); html+=' · '+g.style+' · '+g.wFt+"' x "+g.dFt+"'"+(g.banks>1?' · '+g.banks+' sections':''); if(n.filters) html+=' · '+n.filters+' filters'; }
-  if(n.type==='collar'&&n.size) html+=' · '+n.size;
-  if(n.type==='appl'){ const s=applSpec(n); html+=' · '+s.label+' · '+s.load+' load · '+n.wFt+"'"; }
-  if(n.photo) html+='<br><img src="'+n.photo+'" style="max-width:100%;border-radius:6px;margin-top:6px">';
-  if(n.type==='ductH'||n.type==='ductV') html+='<br>Length: '+(n.lengthFt||'?')+"'";
-  $('selBox').innerHTML=html;
-  if($('lenFt'))$('lenFt').value=n.lengthFt||'';
-  if($('selLabel'))$('selLabel').value=n.label||'';
-  if($('collarSize'))$('collarSize').value=n.size||'';
-  renderThumbs();
-}
-function renderThumbs(){
-  const box=$('thumbs'); box.innerHTML='';
-  const keys=Object.keys(state.photos||{});
-  if(!keys.length){ box.innerHTML='<span class="text-[11px] text-muted">No photos attached.</span>'; return; }
-  keys.forEach(k=>{
-    const d=document.createElement('div'); d.className='lib-item';
-    d.innerHTML='<img src="'+state.photos[k]+'" style="width:100%;border-radius:4px"><div class="text-[10px] text-center mt-1">'+k+'</div>';
-    box.appendChild(d);
-  });
-}
-
-function library(){ try{ return JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ return []; } }
-function persistLib(){ localStorage.setItem(KEY,JSON.stringify(library().slice(0,50))); }
-function renderLib(){
-  const box=$('lib'); box.innerHTML='';
-  library().slice().reverse().forEach((s,i)=>{
-    const d=document.createElement('div'); d.className='lib-item';
-    d.innerHTML='<b>'+(s.name||'Untitled')+'</b><br><span class="text-[10px] text-muted">'+(s.addr||'')+' · '+(s.savedAt||'')+'</span>';
-    d.onclick=()=>{ state=s; stateToForm(); if(s.asset&&$('lineName')){ const a=s.asset; ['lineName','hoodRef','region','acctType','assetLen','assetCollars','assetFilters','filterType','assetHoriz','assetPanels','revenue','freq','techs','hours','applLine','pix'].forEach((id,j)=>{}) ; if($('lineName'))$('lineName').value=a.line||''; if($('hoodRef'))$('hoodRef').value=a.ref||''; if($('region'))$('region').value=a.region||''; if($('acctType'))$('acctType').value=a.account||''; if($('assetLen'))$('assetLen').value=a.len||''; if($('assetCollars'))$('assetCollars').value=a.collars||''; if($('assetFilters'))$('assetFilters').value=a.filters||''; if($('filterType'))$('filterType').value=a.filterType||''; if($('assetHoriz'))$('assetHoriz').value=a.horiz||''; if($('assetPanels'))$('assetPanels').value=a.panels||''; if($('revenue'))$('revenue').value=a.revenue||''; if($('freq'))$('freq').value=a.freq||''; if($('techs'))$('techs').value=a.techs||''; if($('hours'))$('hours').value=a.hours||''; if($('applLine'))$('applLine').value=(a.appl||[]).join(', '); if($('pix'))$('pix').value=a.pix||''; if($('assetCard'))$('assetCard').innerHTML='<b class="ok">'+a.line+'</b> · '+a.ref+' · '+a.region; } selected=null; draw(); audit(); };
-    box.appendChild(d);
-  });
-}
-
-function loadAsset(kind){
-  state=blank();
-  if(kind==='second'){
-    state.name='Blind Salamander'; state.addr='Region 2 - Austin · Hotel'; state.ahj='Austin'; state.tech='DoubleA';
-    state.lineName='Second line'; state.hoodRef='KEC - Line 2'; state.assetId='ASSET-2';
-    state.notes='Second fan path. Separate asset. Do not bill or diagram this on Asset 1.';
-    state.hoodCount=1; state.fanCount=1; state.volume='mod'; state.fanType='Upblast hinged';
-    const h={id:uid(),type:'hood',x:220,y:460,label:'Line 2',hoodStyle:'wall',wFt:8,dFt:4,banks:1}; const c={id:uid(),type:'collar',x:220,y:380,label:'Collar',size:'?'}; const f={id:uid(),type:'fan',x:480,y:180,label:'Fan-2'};
-    state.nodes=[h,c,f]; state.edges=[{id:uid(),from:h.id,to:c.id,lengthFt:2,axis:'V'},{id:uid(),from:c.id,to:f.id,lengthFt:10,axis:'H'}];
-  } else {
-    state.name='Blind Salamander'; state.addr='Region 2 - Austin · Hotel'; state.ahj='Austin'; state.tech='DoubleA';
-    state.material='Not on asset card'; state.packet='stale'; state.volume='mod'; state.fanType='Upblast hinged'; state.hoodCount=1; state.fanCount=1;
-    state.asset={id:'ASSET-1',line:'Blind Salamander',ref:'KEC - Main Line',region:'Region 2 - Austin',account:'Hotel',cls:'1 Electric PW',revenue:650,freq:'3 Months',techs:2,hours:3.5,hoods:1,len:12,collars:2,filters:6,filterType:'High Efficiency - Stainless Steel',drip:1,filtersInService:true,grease:'Moderate',vert:1,vertLen:'1 Floor',horiz:'<10',panels:2,fans:1,fan:'Upblast',hinge:true,belt:'4',pcu:false,pix:'https://app.mytechpix.com/go/95609hu7xs7q1xz',appl:['Fryer','Flat Grill','Stove Top','Char Grill']};
-    state.notes='ASSET 1 of site. 12ft wall, 2 collars, 6 HE baffles, 1 drip cup. L→R: Fryer, Flat Grill, Stove Top, Char Grill. 1 floor rise, common horiz <10ft, 2 panels, 1 upblast, hinge kit yes, belt size 4, no PCU. $650 / 3 months / 2 techs / 3.5 hr.';
-    const h={id:uid(),type:'hood',x:280,y:480,label:'Blind Salamander',hoodStyle:'wall',wFt:12,dFt:4,banks:1}; const c1={id:uid(),type:'collar',x:220,y:400,label:'Collar 1',size:'unknown'}; const c2={id:uid(),type:'collar',x:340,y:400,label:'Collar 2',size:'unknown'}; const rise={id:uid(),type:'elbow',x:280,y:280,label:'1-floor rise'}; const turn={id:uid(),type:'elbow',x:460,y:280,label:'To fan'}; const fan={id:uid(),type:'fan',x:560,y:180,label:'Upblast'}; const p1={id:uid(),type:'panel',x:340,y:280,label:'AP-1'}; const p2={id:uid(),type:'panel',x:400,y:280,label:'AP-2'};
-    const kinds=[['fryer','Fryer',2.5],['griddle','Flat Grill',3],['range','Stove Top',3],['char','Char Grill',3]];
-    const appls=kinds.map((k,i)=>({id:uid(),type:'appl',x:160+i*70,y:560,label:k[1],appl:k[0],wFt:k[2],dFt:2.4,parentHood:h.id}));
-    state.nodes=[h,c1,c2,rise,turn,fan,p1,p2,...appls];
-    state.edges=[{id:uid(),from:h.id,to:c1.id,lengthFt:2,axis:'V'},{id:uid(),from:h.id,to:c2.id,lengthFt:2,axis:'V'},{id:uid(),from:c1.id,to:rise.id,lengthFt:10,axis:'V'},{id:uid(),from:rise.id,to:turn.id,lengthFt:8,axis:'H'},{id:uid(),from:turn.id,to:fan.id,lengthFt:6,axis:'V'}];
-    lastId=fan.id;
-  }
-  stateToForm();
-  if($('lineName')){
-    const a=state.asset||{};
-    if($('lineName'))$('lineName').value=a.line||state.lineName||''; if($('hoodRef'))$('hoodRef').value=a.ref||state.hoodRef||''; if($('region'))$('region').value=a.region||''; if($('acctType'))$('acctType').value=a.account||''; if($('assetLen'))$('assetLen').value=a.len||''; if($('assetCollars'))$('assetCollars').value=a.collars||''; if($('assetFilters'))$('assetFilters').value=a.filters||''; if($('filterType'))$('filterType').value=a.filterType||''; if($('assetHoriz'))$('assetHoriz').value=a.horiz==='<10'?8:''; if($('assetPanels'))$('assetPanels').value=a.panels||''; if($('revenue'))$('revenue').value=a.revenue||''; if($('freq'))$('freq').value=a.freq||''; if($('techs'))$('techs').value=a.techs||''; if($('hours'))$('hours').value=a.hours||''; if($('applLine'))$('applLine').value=(a.appl||[]).join(', '); if($('pix'))$('pix').value=a.pix||'';
-    if($('assetCard'))$('assetCard').innerHTML=a.line?'<b class="ok">'+a.line+'</b> · '+a.ref+' · '+a.region+' · '+a.account+'<br>Class '+a.cls+' · $'+a.revenue+' / '+a.freq+' · '+a.techs+' techs · '+a.hours+' hr<br>'+a.len+"' hood · "+a.collars+' collars · '+a.filters+' baffles · '+a.filterType+'<br>Grease '+a.grease+' · vert '+a.vertLen+' · horiz '+a.horiz+"' · "+a.panels+' panels · '+a.fan+' · hinge '+(a.hinge?'YES':'NO')+' · belt '+a.belt:'Second fan path. New asset. Fill the card before you bid it.';
-  }
-  selected=null; draw(); audit(); renderLib();
-  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
-}
-
-function placeRun(spec){
-  state=blank(); state.name=spec.name; state.addr=spec.addr||''; state.ahj='Austin'; state.tech='DoubleA'; state.fanType=spec.fan; state.fanCount=1; state.hoodCount=1; state.packet='missing'; state.notes=spec.notes;
-  const h={id:uid(),type:'hood',x:180,y:560,label:spec.hood||'Hood',hoodStyle:'wall',wFt:spec.hoodFt||8,dFt:4,banks:1}; const nodes=[h], edges=[]; let x=180,y=500; const col={id:uid(),type:'collar',x,y,label:'Collar',size:spec.collar||''}; nodes.push(col); edges.push({id:uid(),from:h.id,to:col.id,lengthFt:1,axis:'V',kind:'collar'}); let prev=col;
-  spec.pieces.forEach((p,i)=>{
-    const ft=Math.max(0.5,+p.ft||1); const px=Math.min(280,ft*12);
-    if(p.kind==='V'||p.kind==='U90') y-=px; else if(p.kind==='S45'){ x+=px*0.7; y-=px*0.7; } else x+=px;
-    const n={id:uid(),type:p.kind==='U90'||p.kind==='S45'?'elbow':(p.kind==='V'?'ductV':'ductH'),x:Math.round(x),y:Math.round(y),label:p.label}; nodes.push(n); edges.push({id:uid(),from:prev.id,to:n.id,lengthFt:ft,axis:(p.kind==='H'?'H':'V'),kind:p.kind,panels:+p.panels||0});
-    for(let k=0;k<((+p.panels||0));k++){ const t=(k+1)/((+p.panels||0)+1); const a=prev,b=n; nodes.push({id:uid(),type:'panel',x:Math.round(a.x+(b.x-a.x)*t),y:Math.round(a.y+(b.y-a.y)*t),label:'AP-'+(nodes.filter(z=>z.type==='panel').length+1)}); }
-    prev=n;
-  });
-  const fan={id:uid(),type:'fan',x:Math.round(x+30),y:Math.round(y-40),label:spec.fan}; nodes.push(fan); edges.push({id:uid(),from:prev.id,to:fan.id,lengthFt:1,axis:'V',kind:'fan'});
-  state.nodes=nodes; state.edges=edges; state.ductTape=spec.pieces; stateToForm();
-  const total=spec.pieces.reduce((s,p)=>s+(+p.ft||0),0); const pans=spec.pieces.reduce((s,p)=>s+(+p.panels||0),0);
-  if($('tape'))$('tape').innerHTML=spec.pieces.map((p,i)=>i+1+'. <b class="ok">'+p.label+'</b> · '+p.ft+' ft · '+(p.panels||0)+' panel(s)').join('<br>')+'<br><b class="ok">'+total+' ft</b> of measured duct · '+pans+' panels · ends at <b class="ok">'+spec.fan+'</b>';
-  selected=null; lastId=fan.id; draw(); audit(); renderLib();
-}
-
-function exampleRun(){
-  placeRun({name:'Measured run — collar to fan',addr:'Looking up the collar',hood:'Hood',hoodFt:8,fan:$('fanType').value||'Upblast',collar:'',notes:'Collar looking toward fan: 4 ft vertical, 45 into a short slant, 45 into 20 ft horizontal with 3 access panels, 90 up into a 1-story vertical where the horizontal meets the riser, then the fan.',pieces:[{kind:'V',ft:4,panels:0,label:'4 ft vertical off collar'},{kind:'S45',ft:3,panels:0,label:'45 away from hood'},{kind:'S45',ft:3,panels:0,label:'45 into horizontal'},{kind:'H',ft:20,panels:3,label:'20 ft horizontal'},{kind:'U90',ft:12,panels:1,label:'90 up · 1 story to fan'}]});
-}
-
-function applId(label){
-  const s=label.toLowerCase();
-  if(/char|broil/.test(s)) return 'char'; if(/wok|ethnic/.test(s)) return 'wok'; if(/fry/.test(s)) return 'fryer';
-  if(/grill|griddle/.test(s)) return 'griddle'; if(/oven/.test(s)) return 'oven'; if(/solid|wood|pizza/.test(s)) return 'solid';
-  return 'range';
-}
-
-function addAssetFromCard(){
-  const line=($('lineName').value||$('name').value||'Hood line').trim(); const ref=($('hoodRef').value||'').trim(); const region=($('region').value||'').trim(); const account=($('acctType').value||'').trim();
-  const len=Math.max(4,+$('assetLen').value||8); const collars=Math.max(1,+$('assetCollars').value||1); const filters=+$('assetFilters').value||0; const filterType=$('filterType').value||'';
-  const horiz=Math.max(2,+$('assetHoriz').value||8); const panels=Math.max(0,+$('assetPanels').value||0);
-  const appls=($('applLine').value||'').split(',').map(s=>s.trim()).filter(Boolean); const fanType=$('fanType').value||'Upblast';
-  state=blank(); state.name=line; state.addr=[region,account].filter(Boolean).join(' · '); state.ahj=region||''; state.fanType=fanType; state.hoodCount=1; state.fanCount=1;
-  state.notes='Typed asset. '+len+"' hood, "+collars+' collar(s), '+filters+' baffles. L→R: '+(appls.join(', ')||'none listed')+'. Common horiz '+horiz+"' with "+panels+' panel(s). Ends at '+fanType+'.';
-  const h={id:uid(),type:'hood',x:280,y:500,label:line,hoodStyle:'wall',wFt:len,dFt:4,banks:1}; const nodes=[h],edges=[];
-  for(let i=0;i<collars;i++){ const cx=180+((i+0.5)/collars)*200; const c={id:uid(),type:'collar',x:cx,y:410,label:'Collar '+(i+1),size:''}; nodes.push(c); edges.push({id:uid(),from:h.id,to:c.id,lengthFt:2,axis:'V',kind:'collar'}); }
-  const rise={id:uid(),type:'elbow',x:280,y:300,label:'Rise'}; const turn={id:uid(),type:'elbow',x:280+Math.min(220,horiz*8),y:300,label:'To fan'}; const fan={id:uid(),type:'fan',x:turn.x+80,y:190,label:fanType}; nodes.push(rise,turn,fan);
-  const first=nodes.find(n=>n.type==='collar')||h; edges.push({id:uid(),from:first.id,to:rise.id,lengthFt:10,axis:'V',kind:'V'}); edges.push({id:uid(),from:rise.id,to:turn.id,lengthFt:horiz,axis:'H',kind:'H',panels}); edges.push({id:uid(),from:turn.id,to:fan.id,lengthFt:12,axis:'V',kind:'U90'});
-  for(let k=0;k<panels;k++){ const t=(k+1)/(panels+1); nodes.push({id:uid(),type:'panel',x:Math.round(rise.x+(turn.x-rise.x)*t),y:300,label:'AP-'+(k+1)}); }
-  appls.forEach((label,i)=>{
-    const id=applId(label); const spec=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
-    nodes.push({id:uid(),type:'appl',x:140+i*72,y:580,label:label,appl:id,wFt:spec.wFt,dFt:2.4,parentHood:h.id});
-  });
-  state.nodes=nodes; state.edges=edges;
-  state.asset={line,ref,region,account,len,collars,filters,filterType,horiz,panels,appl:appls,fan:fanType,revenue:$('revenue').value,freq:$('freq').value,techs:$('techs').value,hours:$('hours').value,pix:$('pix').value};
-  if($('assetCard'))$('assetCard').innerHTML='<b class="ok">'+line+'</b> drawn from the card · '+(ref||'no ref')+' · '+(region||'no region')+'<br>'+len+"' hood · "+collars+' collars · '+filters+' baffles · '+horiz+"' horiz · "+panels+' panels · '+fanType;
-  stateToForm(); if($('lineName'))$('lineName').value=line; if($('hoodRef'))$('hoodRef').value=ref; if($('region'))$('region').value=region; if($('acctType'))$('acctType').value=account; if($('assetLen'))$('assetLen').value=len; if($('assetCollars'))$('assetCollars').value=collars; if($('assetFilters'))$('assetFilters').value=filters; if($('filterType'))$('filterType').value=filterType; if($('assetHoriz'))$('assetHoriz').value=horiz; if($('assetPanels'))$('assetPanels').value=panels; if($('applLine'))$('applLine').value=appls.join(', ');
-  selected=null; lastId=fan.id; draw(); audit(); renderLib();
-  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
-}
-
-/* ---------- DESCRIBE-THE-RUN parser ---------- */
-function descNum(raw){
-  if(raw==null) return null;
-  const s=String(raw).toLowerCase().replace(/-/g,' ').trim();
-  if(/^\d+(?:\.\d+)?$/.test(s)) return +s;
-  const ones={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90,hundred:100};
-  if(ones[s]!=null) return ones[s];
-  const parts=s.split(/\s+/);
-  if(parts.length===2 && ones[parts[0]] && ones[parts[1]] && ones[parts[0]]>=20 && ones[parts[1]]<10) return ones[parts[0]]+ones[parts[1]];
-  return null;
-}
-function normalizeDesc(text){
-  let t=(' '+(text||'').toLowerCase()+' ').replace(/[–—]/g,' ');
-  t=t.replace(/\ba hundred\b/g,' 100 ').replace(/\bhundred\b/g,' 100 ');
-  t=t.replace(/\btwenty[\s-]?four\b/g,' 24 ').replace(/\bforty\b/g,' 40 ').replace(/\btwelve\b/g,' 12 ').replace(/\btwenty\b/g,' 20 ').replace(/\bthirty\b/g,' 30 ');
-  t=t.replace(/\b(one|two|three|four|five|six|seven|eight)\s+stor(?:y|ies)\b/g,(m,w)=>' '+(descNum(w)*12)+' ft vertical ');
-  t=t.replace(/\b(\d+)\s+stor(?:y|ies)\b/g,(m,n)=>' '+(+n*12)+' ft vertical ');
-  t=t.replace(/\bone more story\b/g,' 12 ft vertical ');
-  return t.replace(/\s+/g,' ').trim();
-}
-function parseDescribe(text){
-  const raw=(text||'');
-  const t=normalizeDesc(raw);
-  const out={hoods:[], gapFt:null, collars:null, filters:null, panels:0, fan:'Upblast', pieces:[], appls:[], warnings:[], storiesAssumed:false};
-  let m;
-  const fanRe=/\b(upblast(?:\s+hinged)?|industrial|in-?line|pcu|self-?contained)\b/i;
-  if((m=fanRe.exec(t))) out.fan=m[1].replace(/\b\w/g,c=>c.toUpperCase());
-  const colRe=/\b(\d+)\s*collars?\b/gi;
-  if((m=colRe.exec(t))) out.collars=+m[1];
-  const filRe=/\b(\d+)\s*(?:baffle\s*)?filters?\b/gi;
-  if((m=filRe.exec(t))) out.filters=+m[1];
-  const panRe=/\b(\d+)\s*(?:access\s*)?panels?\b/gi;
-  while((m=panRe.exec(t))) out.panels+=+m[1];
-  const gapRe=/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*apart\b/;
-  if((m=gapRe.exec(t))) out.gapFt=+m[1];
-  const named=[
-    /\b(main(?:\s+line)?|back(?:\s+line)?|island(?:\s+canopy)?|front(?:\s+line)?|rear(?:\s+line)?)\s+(?:hood|canopy|line)?\s*(\d+(?:\.\d+)?)\s*(?:ft|feet|')/gi,
-    /\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(main(?:\s+line)?|back(?:\s+line)?|island(?:\s+canopy)?|front(?:\s+line)?|rear(?:\s+line)?)\s*(?:hood|canopy)?/gi
-  ];
-  const seen=new Set();
-  named.forEach(re=>{
-    re.lastIndex=0;
-    while((m=re.exec(t))){
-      const a=m[1], b=m[2];
-      const name=/^\d/.test(a)?b:a;
-      const ft=/^\d/.test(a)?+a:+b;
-      const key=name.replace(/\s+/g,' ');
-      if(seen.has(key)) return;
-      seen.add(key);
-      const island=/island|front|rear/.test(key);
-      out.hoods.push({label:key.replace(/\b\w/g,c=>c.toUpperCase()), ft:ft, style:island?'island':'wall'});
-    }
-  });
-  if(!out.hoods.length){
-    const hr=/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(?:wall\s+)?(?:hood|canopy)\b/;
-    if((m=hr.exec(t))) out.hoods.push({label:'Hood', ft:+m[1], style:/island/.test(t)?'island':'wall'});
-  }
-  const countRe=/\b(\d+|four|five|six|seven|eight)\s+hoods?\b/;
-  if((m=countRe.exec(t))){
-    const n=descNum(m[1])||+m[1];
-    while(out.hoods.length<n) out.hoods.push({label:'Hood '+(out.hoods.length+1), ft:out.hoods[0]?out.hoods[0].ft:8, style:/island/.test(t)?'island':'wall'});
-  }
-  const pieceRe=/(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*(verticals?|verts?|rises?|horizontals?|horiz|sideways|slants?|45s?|90s?|up)|(verticals?|horizontals?|horiz|slants?|45|90|up)\s+(?:about\s+|another\s+|a\s+)?(\d+(?:\.\d+)?)\s*(?:ft|feet|')/gi;
-  const used=new Set();
-  if(out.gapFt) used.add(String(out.gapFt));
-  while((m=pieceRe.exec(t))){
-    const ft=+(m[1]||m[4]);
-    const word=(m[2]||m[3]||'').toLowerCase();
-    const at=m.index;
-    const window=t.slice(Math.max(0,at-18), at+m[0].length+12);
-    if(/apart|hood|canopy/.test(window) && !/horizontal|vertical|slant|90|rise/.test(word)) continue;
-    let kind='H';
-    if(/vert|rise|up/.test(word)) kind='V';
-    if(/slant|45/.test(word)) kind='S45';
-    if(/90/.test(word)) kind='U90';
-    if(/up to (?:the )?fan|to the fan/.test(t.slice(at, at+40)) && kind==='V') kind='U90';
-    const label=(kind==='V'?'vertical':kind==='H'?'horizontal':kind==='S45'?'45 slant':'90 up');
-    out.pieces.push({kind, ft, panels:0, label:ft+' ft '+label});
-  }
-  const hp=t.match(/\b(\d+(?:\.\d+)?)\s*(?:ft|feet|')\s*horizont\w*[^.\n]{0,80}?(\d+)\s*(?:access\s*)?panels?\b/);
-  if(hp){
-    const hit=out.pieces.find(p=>p.kind==='H' && Math.abs(p.ft-+hp[1])<1e-9);
-    if(hit) hit.panels=+hp[2];
-  }
-  if(/stor/.test(raw.toLowerCase())) out.storiesAssumed=true;
-  ['fryer','charbroiler','char','griddle','flat grill','range','stove top','wok','oven','salamander','tilt skillet','kettle','steamer','solid fuel','pizza'].forEach(w=>{
-    if(t.indexOf(w)>=0){
-      const lab=w.split(' ').map(s=>s[0].toUpperCase()+s.slice(1)).join(' ');
-      if(!out.appls.includes(lab)) out.appls.push(lab);
-    }
-  });
-  if(!out.hoods.length){ out.hoods.push({label:'Hood', ft:8, style:'wall'}); out.warnings.push('No hood length found — defaulting to 8 ft.'); }
-  if(!out.collars) out.warnings.push('No collar count — one collar per hood.');
-  if(!out.pieces.length) out.warnings.push('No measured duct found. Say "100 ft horizontal" or "horizontal 100 feet".');
-  if(out.storiesAssumed) out.warnings.push('Story height assumed at 12 ft. Change it if the floor-to-floor is different.');
-  return out;
-}
-function placeMulti(spec){
-  state=blank();
-  state.name=spec.name||'Multi-hood asset';
-  state.addr=spec.addr||'One fan path';
-  state.ahj='Austin'; state.tech='DoubleA';
-  state.fanType=spec.fan||'Upblast';
-  state.fanCount=1;
-  state.hoodCount=spec.hoods.length;
-  state.packet='missing';
-  state.notes=spec.notes||'';
-  const nodes=[], edges=[];
-  const gap=spec.gapFt||Math.max(...spec.hoods.map(h=>h.ft),8)+4;
-  const pxGap=Math.min(280, Math.max(150, gap*5));
-  const hoods=[];
-  spec.hoods.forEach((h,i)=>{
-    const x=160+i*pxGap;
-    const node={id:uid(),type:'hood',x,y:620,label:h.label,hoodStyle:h.style||'wall',wFt:h.ft||8,dFt:h.style==='island'?8:4,banks:1};
-    nodes.push(node); hoods.push(node);
-    const c={id:uid(),type:'collar',x,y:540,label:h.label+' collar',size:''};
-    nodes.push(c);
-    edges.push({id:uid(),from:node.id,to:c.id,lengthFt:2,axis:'V',kind:'collar'});
-  });
-  const trunkY=430;
-  const joins=[];
-  hoods.forEach((h,i)=>{
-    const c=nodes.find(n=>n.type==='collar' && n.x===h.x);
-    const j={id:uid(),type:'elbow',x:h.x,y:trunkY,label:'Join '+(i+1)};
-    nodes.push(j); joins.push(j);
-    edges.push({id:uid(),from:c.id,to:j.id,lengthFt:4,axis:'V',kind:'V'});
-  });
-  for(let i=1;i<joins.length;i++){
-    edges.push({id:uid(),from:joins[i-1].id,to:joins[i].id,lengthFt:spec.gapFt||8,axis:'H',kind:'H',panels:0});
-  }
-  let prev=joins[joins.length-1];
-  let x=prev.x, y=prev.y;
-  spec.pieces.forEach(p=>{
-    const ft=Math.max(0.5,+p.ft||1);
-    const px=Math.min(240, Math.max(50, ft*2.2));
-    if(p.kind==='V'||p.kind==='U90') y-=px;
-    else if(p.kind==='S45'){ x+=px*0.7; y-=px*0.7; }
-    else x+=px;
-    const n={id:uid(),type:p.kind==='U90'||p.kind==='S45'?'elbow':(p.kind==='V'?'ductV':'ductH'),x:Math.round(x),y:Math.round(y),label:p.label};
-    nodes.push(n);
-    edges.push({id:uid(),from:prev.id,to:n.id,lengthFt:ft,axis:p.kind==='H'?'H':'V',kind:p.kind,panels:+p.panels||0});
-    for(let k=0;k<(+p.panels||0);k++){
-      const tt=(k+1)/((+p.panels||0)+1);
-      nodes.push({id:uid(),type:'panel',x:Math.round(prev.x+(n.x-prev.x)*tt),y:Math.round(prev.y+(n.y-prev.y)*tt),label:'AP-'+(nodes.filter(z=>z.type==='panel').length+1)});
-    }
-    prev=n;
-  });
-  const fan={id:uid(),type:'fan',x:Math.round(x+36),y:Math.round(y-36),label:spec.fan||'Upblast'};
-  nodes.push(fan);
-  edges.push({id:uid(),from:prev.id,to:fan.id,lengthFt:1,axis:'V',kind:'fan'});
-  if(spec.appls && spec.appls.length){
-    spec.appls.forEach((label,i)=>{
-      const hood=hoods[i%hoods.length];
-      const id=applId(label);
-      const sp=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
-      nodes.push({id:uid(),type:'appl',x:hood.x-40+i*36,y:700,label,appl:id,wFt:sp.wFt,dFt:2.4,parentHood:hood.id});
-    });
-  }
-  state.nodes=nodes; state.edges=edges; state.ductTape=spec.pieces;
-  state.asset={line:state.name, hoods:spec.hoods.length, len:spec.hoods.map(h=>h.ft).join('+'), collars:spec.collars||spec.hoods.length, filters:spec.filters||0, horiz:spec.gapFt, panels:spec.panels||0, appl:spec.appls||[], fan:spec.fan, fans:1};
-  stateToForm();
-  if($('hoodCount')) $('hoodCount').value=spec.hoods.length;
-  if($('fanCount')) $('fanCount').value=1;
-  if($('fanType')) $('fanType').value=spec.fan;
-  if($('assetCard')) $('assetCard').innerHTML='<b class="ok">1 asset · '+spec.hoods.length+' hood'+(spec.hoods.length>1?'s':'')+' · 1 fan</b><br>'+spec.hoods.map(h=>h.label+' '+h.ft+"'").join(' · ')+(spec.gapFt?' · '+spec.gapFt+"' apart":'')+'<br>Ends at '+spec.fan+'. Second fan would be a second asset.';
-  selected=null; lastId=fan.id; draw(); audit(); renderLib();
-  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
-}
-function describeRun(){
-  const raw=$('descInput').value;
-  const spec=parseDescribe(raw);
-  if(!spec.pieces.length && spec.hoods.length<2){
-    if($('descOut')) $('descOut').innerHTML='<span class="bad">No measured pieces parsed.</span> Try <b>100 ft horizontal</b> or <b>horizontal 100 feet</b>, and <b>two stories</b> for a 24 ft rise.';
+  if (state.freehand) {
+    drawing = true;
+    currentPath = [p];
     return;
   }
-  const multi=spec.hoods.length>1 || spec.gapFt;
-  if(multi){
-    placeMulti({name:'Multi-hood · one fan', addr:'One asset', fan:spec.fan, hoods:spec.hoods, gapFt:spec.gapFt, pieces:spec.pieces, appls:spec.appls, notes:'Described: '+(raw||'').replace(/\s+/g,' ').slice(0,240)});
-  } else {
-    placeRun({name:'Described run', addr:'From typed description', hood:spec.hoods[0].label, hoodFt:spec.hoods[0].ft, collar:'', fan:spec.fan, notes:'Described: '+(raw||'').replace(/\s+/g,' ').slice(0,220), pieces:spec.pieces});
-    const h=state.nodes.find(n=>n.type==='hood');
-    if(h && spec.filters) h.filters=spec.filters;
-    if(spec.appls.length){
-      const hood=state.nodes.find(n=>n.type==='hood');
-      spec.appls.forEach((label,i)=>{
-        const id=applId(label); const sp=APPLIANCES.find(a=>a.id===id)||APPLIANCES[0];
-        state.nodes.push({id:uid(),type:'appl',x:140+i*72,y:640,label,appl:id,wFt:sp.wFt,dFt:2.4,parentHood:hood.id});
-      });
+
+  const hit = hitNode(p.x, p.y);
+  if (state.tool === 'select') {
+    if (hit) {
+      selected = hit.id;
+      dragging = { node: hit, dx: p.x - hit.x, dy: p.y - hit.y };
+    } else {
+      selected = null;
     }
-    state.asset={line:state.name,len:spec.hoods[0].ft,collars:spec.collars||1,filters:spec.filters||0,panels:spec.panels||0,appl:spec.appls,fan:spec.fan,hoods:1,fans:1};
+  } else {
+    const n = { id: uid(), type: state.tool, x: p.x, y: p.y, label: state.tool };
+    state.nodes.push(n);
+    selected = n.id;
+  }
+  draw();
+  audit();
+}
+
+function onPointerMove(e){
+  if (!canvas.hasPointerCapture(e.pointerId)) return;
+  e.preventDefault();
+  const p = toLocal(e.clientX, e.clientY);
+
+  if (drawing && state.freehand) {
+    currentPath.push(p);
+    draw();
+    return;
+  }
+
+  if (dragging) {
+    dragging.node.x = p.x - dragging.dx;
+    dragging.node.y = p.y - dragging.dy;
+    draw();
+  }
+}
+
+function onPointerUp(e){
+  if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+  if (drawing && state.freehand && currentPath.length > 1) {
+    state.freehandPaths.push(currentPath);
+  }
+  drawing = false;
+  currentPath = [];
+  dragging = null;
+  draw();
+}
+
+canvas.addEventListener('pointerdown', onPointerDown);
+canvas.addEventListener('pointermove', onPointerMove);
+canvas.addEventListener('pointerup', onPointerUp);
+canvas.addEventListener('pointercancel', onPointerUp);
+
+// tools
+const TOOLS = ['hood','appliance','collar','elbow','duct','panel','fan','select'];
+function buildTools(){
+  const bar = document.getElementById('toolBar');
+  bar.innerHTML = '';
+  TOOLS.forEach(t => {
+    const b = document.createElement('button');
+    b.className = 'tool' + (state.tool === t && !state.freehand ? ' on' : '');
+    b.textContent = t.toUpperCase();
+    b.onclick = () => {
+      state.tool = t;
+      state.freehand = false;
+      document.getElementById('btnFreehand').classList.remove('on');
+      buildTools();
+    };
+    bar.appendChild(b);
+  });
+}
+
+document.getElementById('btnFreehand').onclick = () => {
+  state.freehand = !state.freehand;
+  document.getElementById('btnFreehand').classList.toggle('on', state.freehand);
+  if (state.freehand) state.tool = 'select';
+  buildTools();
+};
+
+// map controls
+document.getElementById('btnConnect').onclick = () => {
+  if (state.nodes.length >= 2) {
+    const a = state.nodes[state.nodes.length - 2];
+    const b = state.nodes[state.nodes.length - 1];
+    state.edges.push({ from: a.id, to: b.id });
     draw(); audit();
   }
-  const tot=spec.pieces.reduce((s,p)=>s+(+p.ft||0),0);
-  let html='<b class="ok">Drew it.</b> '+spec.hoods.length+' hood'+(spec.hoods.length>1?'s':'')+' on <b class="ok">1 fan</b> · '+spec.pieces.length+' duct pieces · <b class="ok">'+tot+' ft</b>.';
-  if(spec.gapFt) html+=' Lines '+spec.gapFt+' ft apart.';
-  if(spec.warnings.length) html+='<br><span class="warn">'+spec.warnings.join(' ')+'</span>';
-  html+='<br><span class="text-[11px] text-cyan-300">Asset = the fan path. Add a second fan and it becomes a second asset.</span>';
-  if($('descOut')) $('descOut').innerHTML=html;
-}
-$('btnDescribe').onclick = describeRun;
-$('btnDescClear').onclick = () => { if($('descInput'))$('descInput').value=''; if($('descOut'))$('descOut').innerHTML=''; };
-$('btnDescDemo1').onclick = () => { if($('descInput'))$('descInput').value='12 ft wall canopy with 2 collars and 6 baffle filters. Appliances left to right: fryer, flat grill, stove top, char grill. 10 ft vertical rise, 8 ft horizontal common duct with 2 access panels, 12 ft 90 up to an upblast hinged fan.'; describeRun(); };
-$('btnDescDemo2').onclick = () => { if($('descInput'))$('descInput').value='8 ft wall canopy, 1 collar. 4 ft vertical off collar, 3 ft 45 slant away from hood, 3 ft 45 into horizontal, 20 ft horizontal with 3 access panels, 12 ft 90 up to an upblast fan.'; describeRun(); };
-$('btnDescDemo3').onclick = () => { if($('descInput'))$('descInput').value='Multi-hood system. Main line hood 10 ft, back line hood 8 ft, 40 feet apart. Joining ductwork horizontals about a hundred feet, then verticals two stories, then horizontals another 10 feet, then verticals one more story to the upblast fan.'; describeRun(); };
+};
+document.getElementById('btnUndo').onclick = () => {
+  state.nodes.pop();
+  if (state.edges.length) state.edges.pop();
+  draw(); audit();
+};
+document.getElementById('btnClear').onclick = () => {
+  state.nodes = []; state.edges = []; state.freehandPaths = [];
+  selected = null;
+  draw(); audit();
+};
+document.getElementById('btnDemo').onclick = () => {
+  state.nodes = [
+    { id: 'h1', type: 'hood', x: 180, y: 180, label: 'Main Hood 12ft' },
+    { id: 'c1', type: 'collar', x: 180, y: 260, label: 'Collar' },
+    { id: 'd1', type: 'duct', x: 380, y: 260, label: '30ft' },
+    { id: 'f1', type: 'fan', x: 560, y: 260, label: 'Upblast' }
+  ];
+  state.edges = [
+    { from: 'h1', to: 'c1' },
+    { from: 'c1', to: 'd1' },
+    { from: 'd1', to: 'f1' }
+  ];
+  state.freehandPaths = [];
+  cam.s = 1; cam.x = 40; cam.y = 40;
+  sizeCanvas();
+  draw();
+  audit();
+};
 
-function playDemoVoice(){ const a=$('demoVoice'); if(!a) return; a.currentTime=0; a.play().catch(()=>{}); }
-$('btnAddAsset').onclick = addAssetFromCard;
-$('btnVoice').onclick = playDemoVoice;
-$('btnAsset').onclick = () => loadAsset('blind');
-$('btnAsset2').onclick = () => loadAsset('second');
-$('btnRun').onclick = exampleRun;
-$('btnFanEnd').onclick = () => {
-  if(!lastId){ alert('Drop or select a node first.'); return; }
-  const n=byId(lastId); if(!n) return;
-  const f={id:uid(),type:'fan',x:n.x+60,y:n.y-40,label:$('fanType').value||'Fan'};
-  state.nodes.push(f); addEdge(n.id,f.id,'V','fan',1); lastId=f.id; selected=null; draw(); audit(); renderLib();
-  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
+document.getElementById('zIn').onclick = () => { cam.s = Math.min(cam.s * 1.25, 4); draw(); };
+document.getElementById('zOut').onclick = () => { cam.s = Math.max(cam.s / 1.25, 0.3); draw(); };
+document.getElementById('zFit').onclick = () => { cam.s = 1; cam.x = 40; cam.y = 40; draw(); };
+
+// describe
+document.getElementById('btnDescribe').onclick = () => {
+  const parsed = parseDescribe(document.getElementById('describe').value);
+  document.getElementById('parsePreview').textContent = JSON.stringify(parsed);
+  state.nodes = []; state.edges = [];
+  let x = 120, y = 180;
+  parsed.hoods.forEach((h, i) => {
+    const id = 'h' + i;
+    state.nodes.push({ id, type: 'hood', x, y, label: h.label + ' ' + h.len + 'ft' });
+    x += 160;
+  });
+  parsed.ducts.forEach((d, i) => {
+    const id = 'd' + i;
+    const ny = d.kind === 'vertical' ? y + 90 : y;
+    state.nodes.push({ id, type: 'duct', x, y: ny, label: d.len + 'ft ' + d.kind });
+    if (state.nodes.length > 1) state.edges.push({ from: state.nodes[state.nodes.length - 2].id, to: id });
+    x += Math.min(d.len * 3, 180);
+  });
+  const fanId = 'fan';
+  state.nodes.push({ id: fanId, type: 'fan', x, y, label: parsed.fan });
+  if (state.nodes.length > 1) state.edges.push({ from: state.nodes[state.nodes.length - 2].id, to: fanId });
+  // Switch to map first so the canvas has real size, then draw
+  document.querySelector('[data-page="map"]').click();
+  setTimeout(() => { sizeCanvas(); draw(); audit(); }, 60);
 };
-$('btnAddDuct').onclick = () => {
-  const kind=$('ductKind').value; const ft=+$('ductFt').value||1; const panels=+$('ductPanels').value||0;
-  if(!lastId){ alert('Select or drop a starting node first (hood or collar).'); return; }
-  const prev=byId(lastId); if(!prev) return;
-  const px=Math.min(280,ft*12); let x=prev.x,y=prev.y;
-  if(kind==='V'||kind==='U90') y-=px; else if(kind==='S45'){ x+=px*0.7; y-=px*0.7; } else x+=px;
-  const n={id:uid(),type:kind==='U90'||kind==='S45'?'elbow':(kind==='V'?'ductV':'ductH'),x:Math.round(x),y:Math.round(y),label:(ft+"' "+(kind==='V'?'vertical':kind==='H'?'horizontal':kind==='S45'?'45':kind))}; state.nodes.push(n); addEdge(prev.id,n.id,kind==='H'?'H':'V',kind,ft); for(let k=0;k<panels;k++){ const t=(k+1)/(panels+1); state.nodes.push({id:uid(),type:'panel',x:Math.round(prev.x+(n.x-prev.x)*t),y:Math.round(prev.y+(n.y-prev.y)*t),label:'AP-'+(state.nodes.filter(z=>z.type==='panel').length+1)}); } lastId=n.id; selected=null; draw(); audit(); renderLib();
-  if($('tape')){ const tape=state.ductTape||[]; tape.push({kind,ft,panels,label:n.label}); state.ductTape=tape; const total=tape.reduce((s,p)=>s+p.ft,0); const pans=tape.reduce((s,p)=>s+(+p.panels||0),0); $('tape').innerHTML=tape.map((p,i)=>i+1+'. <b class="ok">'+p.label+'</b> · '+p.ft+' ft · '+(p.panels||0)+' panel(s)').join('<br>')+'<br><b class="ok">'+total+' ft</b> total · '+pans+' panels'; }
-  document.getElementById('board').scrollIntoView({behavior:'smooth',block:'center'});
+document.getElementById('btnSample').onclick = () => {
+  document.getElementById('describe').value = "Main line hood 12 ft, 40 feet horizontal, two stories vertical rise, then 10 ft to the upblast fan with access panels";
 };
-$('btnConnect').onclick = () => {
-  if(state.nodes.length<2){ alert('Need at least two nodes.'); return; }
-  const a=state.nodes[state.nodes.length-2], b=state.nodes[state.nodes.length-1];
-  if(state.edges.some(e=>e.from===a.id&&e.to===b.id)){ alert('Already connected.'); return; }
-  addEdge(a.id,b.id); lastId=b.id; draw(); audit(); renderLib();
-};
-$('btnReverse').onclick = () => {
-  if(!selected||selected.type!==undefined&&!state.edges.find(e=>e.id===selected.id)){
-    // try find edge near selected node
-    const e=state.edges.find(ed=>ed.from===selected.id||ed.to===selected.id); if(!e){ alert('Select a duct run first.'); return; } selected=e;
+
+// pieces — now places a node on the map and lists it
+document.getElementById('btnAddPiece').onclick = () => {
+  const p = {
+    type: document.getElementById('pieceType').value,
+    len: +document.getElementById('pieceLen').value,
+    panels: +document.getElementById('piecePanels').value
+  };
+  state.pieces.push(p);
+  document.getElementById('pieceList').innerHTML = state.pieces.map(x => `${x.type} ${x.len}ft (${x.panels} panels)`).join('<br>');
+  // Place a corresponding node on the map
+  const last = state.nodes[state.nodes.length - 1];
+  const nx = last ? last.x + 120 : 160;
+  const ny = last ? last.y : 200;
+  const id = 'piece' + state.pieces.length;
+  const nodeType = p.type.toLowerCase().includes('vertical') ? 'duct' : 'duct';
+  state.nodes.push({ id, type: nodeType, x: nx, y: ny, label: p.len + 'ft ' + p.type });
+  if (last) state.edges.push({ from: last.id, to: id });
+  audit();
+  // If user is on describe page, switch to map so they see it
+  const mapTab = document.querySelector('[data-page="map"]');
+  if (mapTab && !document.getElementById('page-map').classList.contains('on')) {
+    mapTab.click();
   }
-  const e=state.edges.find(ed=>ed.id===selected.id); if(!e) return;
-  const tmp=e.from; e.from=e.to; e.to=tmp; draw(); audit();
-};
-$('btnUndo').onclick = () => { if(!state.nodes.length) return; const n=state.nodes.pop(); state.edges=state.edges.filter(e=>e.from!==n.id&&e.to!==n.id); if(selected&&selected.id===n.id) selected=null; lastId=state.nodes.length?state.nodes[state.nodes.length-1].id:null; draw(); audit(); renderLib(); };
-$('btnClear').onclick = () => { if(confirm('Clear the map?')){ state=blank(); stateToForm(); selected=null; lastId=null; draw(); audit(); renderLib(); } };
-$('btnDemo').onclick = () => {
-  state=blank(); state.name='Demo — Deep Ellum Taqueria'; state.addr='2400 Main St, Dallas, TX'; state.ahj='Dallas Fire-Rescue'; state.tech='DoubleA'; state.material='16 ga black iron'; state.packet='missing'; state.volume='high'; state.notes='Line 1: fryers + char under Hood A, range under Hood B. Island: woks both faces. Peak load HIGH → quarterly inspect.'; state.hoodCount=3;
-  const hA={id:uid(),type:'hood',x:200,y:470,label:'Hood A',notes:'',hoodStyle:'bank',wFt:10,dFt:4,banks:2}; const hB={id:uid(),type:'hood',x:420,y:470,label:'Hood B',notes:'',hoodStyle:'wall',wFt:8,dFt:4,banks:1,bankId:hA.id}; hA.bankId=hA.id; const island={id:uid(),type:'hood',x:720,y:470,label:'Island 1',notes:'',hoodStyle:'island',wFt:12,dFt:8,banks:2}; const c1={id:uid(),type:'collar',x:170,y:400,label:'A collar',notes:'',size:'18x18'}; const c2={id:uid(),type:'collar',x:420,y:400,label:'B collar',notes:'',size:'16x16'}; const c3={id:uid(),type:'collar',x:680,y:390,label:'Island F1',notes:'',size:'18x18'}; const c4={id:uid(),type:'collar',x:760,y:390,label:'Island F2',notes:'',size:'18x18'}; const e1={id:uid(),type:'elbow',x:170,y:250,label:'Rise A',notes:''}; const e2={id:uid(),type:'elbow',x:520,y:250,label:'Roof elbow',notes:''}; const f={id:uid(),type:'fan',x:700,y:160,label:'Fan-1',notes:''}; const p={id:uid(),type:'panel',x:170,y:320,label:'AP-1',notes:''}; const a1={id:uid(),type:'appl',x:160,y:540,label:'Fryer bank',appl:'fryer',wFt:2.5,dFt:2.4,parentHood:hA.id}; const a2={id:uid(),type:'appl',x:240,y:540,label:'Charbroiler',appl:'char',wFt:3,dFt:2.4,parentHood:hA.id}; const a3={id:uid(),type:'appl',x:420,y:540,label:'Range',appl:'range',wFt:3,dFt:2.4,parentHood:hB.id}; const a4={id:uid(),type:'appl',x:670,y:570,label:'Wok / ethnic',appl:'wok',wFt:3,dFt:2.4,parentHood:island.id}; const a5={id:uid(),type:'appl',x:770,y:570,label:'Wok / ethnic',appl:'wok',wFt:3,dFt:2.4,parentHood:island.id}; state.nodes=[hA,hB,island,c1,c2,c3,c4,e1,e2,f,p,a1,a2,a3,a4,a5]; state.edges=[{id:uid(),from:hA.id,to:c1.id,lengthFt:2,axis:'V'},{id:uid(),from:c1.id,to:e1.id,lengthFt:8,axis:'V'},{id:uid(),from:hB.id,to:c2.id,lengthFt:2,axis:'V'},{id:uid(),from:c2.id,to:e2.id,lengthFt:10,axis:'V'},{id:uid(),from:island.id,to:c3.id,lengthFt:2,axis:'V'},{id:uid(),from:island.id,to:c4.id,lengthFt:2,axis:'V'},{id:uid(),from:e1.id,to:e2.id,lengthFt:22,axis:'H'},{id:uid(),from:e2.id,to:f.id,lengthFt:6,axis:'H'}]; stateToForm(); lastId=f.id; selected=null; draw(); audit(); renderLib(); playDemoVoice();
+  setTimeout(() => { sizeCanvas(); draw(); }, 60);
 };
 
-tools(); stateToForm(); if($('btnZoomIn'))$('btnZoomIn').onclick=()=>zoomBy(1.22); if($('btnZoomOut'))$('btnZoomOut').onclick=()=>zoomBy(1/1.22); if($('btnZoomFit'))$('btnZoomFit').onclick=()=>{cam={s:1.35,x:40,y:20};draw();}; window.addEventListener('resize',sizeCanvas); sizeCanvas(); draw(); audit(); renderLib();
+// compliance expanded
+function audit(){
+  const flags = [];
+  let score = 100;
+  const horiz = state.pieces.filter(p => p.type === 'Horizontal').reduce((s, p) => s + p.len, 0) || 40;
+  const panels = state.pieces.reduce((s, p) => s + p.panels, 0);
+  const needed = Math.ceil(horiz / 12);
+  if (panels < needed) { flags.push({ level: 'fail', text: `Access panels: ${panels} found, ~${needed} recommended every 12 ft horizontal (NFPA 96)` }); score -= 25; }
+  else flags.push({ level: 'pass', text: `Access panels spacing looks good (~every 12 ft)` });
+  if (!state.nodes.some(n => n.type === 'fan')) { flags.push({ level: 'fail', text: 'No fan node placed' }); score -= 20; }
+  if (!state.nodes.some(n => n.type === 'hood')) { flags.push({ level: 'warn', text: 'No hood node' }); score -= 10; }
+  const fanType = document.getElementById('fanType')?.value || 'Upblast';
+  if (fanType === 'Upblast') flags.push({ level: 'pass', text: 'Upblast noted — confirm hinge kit / grease containment' });
+  flags.push({ level: 'pass', text: 'Packet status: field as-built for owner / AHJ' });
+  if ((document.getElementById('notes')?.value || '').toLowerCase().includes('solid')) flags.push({ level: 'warn', text: 'Solid fuel mentioned — monthly inspection frequency required' });
+  if (state.edges.length === 0 && state.nodes.length > 1) flags.push({ level: 'warn', text: 'Nodes present but not connected' });
+  document.getElementById('scoreBig').textContent = Math.max(0, score) + '%';
+  document.getElementById('scoreChip').textContent = 'COMPLIANCE ' + Math.max(0, score) + '%';
+  document.getElementById('mathSummary').textContent = `Horizontal ~${horiz} ft · Panels ${panels} · Nodes ${state.nodes.length} · Edges ${state.edges.length}`;
+  document.getElementById('flags').innerHTML = flags.map(f => `<div class="flag ${f.level}">${f.text}</div>`).join('');
+}
+
+// library
+const LIB_KEY = 'nexus_duct_v2';
+function loadLib(){ try { return JSON.parse(localStorage.getItem(LIB_KEY) || '[]'); } catch { return []; } }
+function saveLib(arr){ localStorage.setItem(LIB_KEY, JSON.stringify(arr)); }
+function renderLib(){
+  const arr = loadLib();
+  document.getElementById('libChip').textContent = arr.length + ' SITES';
+  document.getElementById('libList').innerHTML = arr.map((s, i) => `<div class="lib-item mb-2" data-i="${i}">${s.name || 'Untitled'} · ${s.date || ''}<br><small class="text-[#7aa89a]">Click to load</small></div>`).join('') || '<div class="text-[#7aa89a]">No saved sites yet</div>';
+  document.querySelectorAll('.lib-item').forEach(el => el.onclick = () => {
+    const s = loadLib()[el.dataset.i];
+    if (s && s.state) Object.assign(state, s.state);
+    document.getElementById('name').value = s.name || '';
+    draw(); audit();
+    document.querySelector('[data-page="map"]').click();
+  });
+}
+document.getElementById('btnSave').onclick = () => {
+  const arr = loadLib();
+  arr.unshift({ name: document.getElementById('name').value || 'Site ' + Date.now(), date: new Date().toLocaleString(), state: JSON.parse(JSON.stringify(state)) });
+  saveLib(arr.slice(0, 20));
+  renderLib();
+  alert('Saved to local library');
+};
+document.getElementById('btnExport').onclick = () => {
+  const blob = new Blob([JSON.stringify({ site: document.getElementById('name').value, state }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'nexus-duct-site.json'; a.click();
+};
+document.getElementById('btnPrint').onclick = () => window.print();
+
+// tabs
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+    tab.classList.add('on');
+    document.getElementById('page-' + tab.dataset.page).classList.add('on');
+    if (tab.dataset.page === 'map') {
+      // Wait for layout, then size + redraw so nodes actually appear
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          sizeCanvas();
+          draw();
+        });
+      });
+    }
+  };
+});
+
+// tutorial
+const STEPS = [
+  "Welcome to NEXUS Duct v2. This is the field as-built kernel for NFPA 96 §4.6.4. One fan path = one drawing.",
+  "Start on SETUP. Enter the site name, address, AHJ, and fan type. This becomes the owner packet header.",
+  "Go to DESCRIBE. Type the run in plain language. The parser auto-corrects common terms and light misspellings so field notes still work.",
+  "Hit DRAW FROM WORDS. It places hoods, duct segments, and the fan on the map. Then refine with tools.",
+  "On SYSTEM MAP use the tools to drop nodes, connect them, or turn on FREEHAND to sketch annotations or rough paths. Freehand draws live under your finger.",
+  "COMPLIANCE runs expanded checks: access panel spacing (~12 ft), fan presence, solid fuel notes, connections. Score updates live.",
+  "LIBRARY saves locally, exports JSON, or prints a packet. Everything stays on-device.",
+  "That's the loop. Describe → Map → Audit → Packet. Field as-built, not a permit set. DoubleA · AntManThePro."
+];
+let step = 0;
+function showTut(){
+  document.getElementById('tutStep').textContent = STEPS[step];
+  document.getElementById('tutProgress').textContent = `Step ${step + 1} / ${STEPS.length}`;
+}
+document.getElementById('btnTutorial').onclick = () => { document.getElementById('tutorialModal').classList.add('on'); step = 0; showTut(); };
+document.getElementById('closeTut').onclick = () => document.getElementById('tutorialModal').classList.remove('on');
+document.getElementById('tutNext').onclick = () => { step = Math.min(step + 1, STEPS.length - 1); showTut(); };
+document.getElementById('tutPrev').onclick = () => { step = Math.max(step - 1, 0); showTut(); };
+
+// init
+buildTools();
+sizeCanvas();
+audit();
+renderLib();
+window.addEventListener('resize', sizeCanvas);
+
 </script>
 </body>
 </html>
