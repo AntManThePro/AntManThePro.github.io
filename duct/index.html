@@ -6,8 +6,15 @@
 <meta name="theme-color" content="#0a0a0f"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="NEXUS Duct"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="NEXUS Duct As-Built v2 — field as-built kernel for kitchen exhaust systems and NFPA 96 checks. Describe the run, map the system, audit compliance, save and export site packets on-device."/>
+<link rel="manifest" href="./manifest.json"/>
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png"/>
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 <title>NEXUS Duct As-Built v2 — Field Kernel</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
 <style>
   :root{
     --g:#00ff87;--c:#60efff;--p:#ff0080;--y:#ffcc00;--bg:#0a0a0f;
@@ -29,6 +36,7 @@
   #boardWrap{position:relative;border:1px dashed #1e3a2f;border-radius:10px;overflow:hidden;background:#07070b;touch-action:none;-webkit-user-select:none;user-select:none}
   #board{width:100%;height:min(70vh,720px);min-height:480px;background:#07070b;display:block;cursor:crosshair;touch-action:none}
   #zoomBar{position:absolute;right:8px;bottom:8px;display:flex;gap:6px;z-index:2}
+  #photoCanvas{width:100%;height:auto;display:block;background:#07070b;border:1px dashed #1e3a2f;border-radius:10px;touch-action:none;cursor:crosshair}
   #zoomBar button{min-width:40px;min-height:36px;background:#0c0c12cc;border:1px solid #2a3d34;color:#00ff87;border-radius:8px;font-weight:800}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
   .tab{padding:8px 14px;border-radius:8px;border:1px solid #2a3d34;background:#0c0c12;color:#9fe8c8;cursor:pointer;font-size:12px;letter-spacing:.06em}
@@ -74,6 +82,7 @@
     <button class="tab" data-page="map">3 · SYSTEM MAP</button>
     <button class="tab" data-page="compliance">4 · COMPLIANCE</button>
     <button class="tab" data-page="library">5 · LIBRARY</button>
+    <button class="tab" data-page="photo">6 · PHOTO INTEL</button>
   </div>
 
   <!-- SETUP -->
@@ -171,6 +180,56 @@
       <div id="libList"></div>
     </section>
   </div>
+
+  <!-- PHOTO INTEL -->
+  <div class="page" id="page-photo">
+    <section class="card p-3 mb-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-1">PHOTO INTEL — TAKE A PHOTO, MEASURE IT</div>
+      <p class="text-[11px] text-[#7aa89a] m-0 mb-2">1) Take / upload a photo. 2) Tap 2 points on a thing you know the length of, enter that length, Set Scale. 3) Switch to Measure, tap pairs to measure duct, hoods and runs. This is a calibrated estimate, not a survey measurement — take the photo straight-on, with the reference in the same plane as what you measure, and verify with a tape for bidding / compliance.</p>
+      <div class="flex gap-2 flex-wrap mb-2 no-print">
+        <label class="act" style="cursor:pointer;padding:11px 14px">📷 TAKE / UPLOAD PHOTO<input id="photoFile" type="file" accept="image/*" capture="environment" style="display:none"/></label>
+        <button class="ghost" type="button" id="photoModeCal">MODE: CALIBRATE</button>
+        <button class="ghost" type="button" id="photoModeMeas">MODE: MEASURE</button>
+      </div>
+      <canvas id="photoCanvas"></canvas>
+      <p class="text-[11px] text-[#7aa89a] mt-2" id="photoHint">No photo loaded yet. Tap "TAKE / UPLOAD PHOTO" — on a phone this opens the camera.</p>
+    </section>
+
+    <section class="card p-3 mb-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">CALIBRATION — THE PART THAT MAKES IT REAL</div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label>Known reference length (ft)</label><input id="photoRefFt" type="number" min="0.1" step="0.1" value="4"/></div>
+        <div class="flex items-end"><button class="act w-full" type="button" id="photoSetScale">SET SCALE FROM 2 TAPS</button></div>
+      </div>
+      <div id="photoScale" class="text-sm text-cyan-300 mt-2">Not calibrated yet. In CALIBRATE mode, tap the two ends of your reference object first.</div>
+      <label>Piece type for measured segments</label>
+      <select id="photoPieceType"><option>Horizontal</option><option>Vertical</option><option>45° Slant</option><option>90° Turn</option></select>
+      <div id="photoMeasures" class="text-sm mt-2"></div>
+      <div class="flex gap-2 flex-wrap mt-2 no-print">
+        <button class="ghost" type="button" id="photoUndo">UNDO LAST TAP</button>
+        <button class="ghost" type="button" id="photoClear">CLEAR MEASUREMENTS</button>
+        <button class="act" type="button" id="photoAddPieces">ADD MEASUREMENTS TO DUCT PIECES</button>
+      </div>
+    </section>
+
+    <section class="card p-3 mb-3">
+      <div class="text-xs tracking-widest text-cyan-300 mb-2">OSINT — WHAT THE PHOTO ITSELF SAYS</div>
+      <p class="text-[11px] text-[#7aa89a] m-0 mb-2">Read on-device only. Nothing is uploaded by this page. GPS in a photo can reveal the site — strip it before you share a photo publicly.</p>
+      <div id="photoIntel" class="text-sm">No photo loaded yet.</div>
+      <label class="mt-2"><input id="photoStripGps" type="checkbox" checked style="width:auto"/> Strip GPS from the exported JSON (recommended)</label>
+      <div class="flex gap-2 flex-wrap mt-2 no-print">
+        <button class="ghost" type="button" id="photoExportJson">EXPORT PHOTO INTEL JSON</button>
+        <button class="ghost" type="button" id="photoExportPng">EXPORT ANNOTATED PHOTO (PNG)</button>
+      </div>
+      <p class="text-[11px] text-[#7aa89a] mt-2">Exported PNGs are re-drawn from the canvas, so the original EXIF (including GPS) is not carried over. Exported JSON only includes GPS if you uncheck the strip box above.</p>
+    </section>
+
+    <section class="card p-3">
+      <div class="text-xs tracking-widest text-yellow-300 mb-1">AI AUTO-DETECT — HONEST STATUS</div>
+      <p class="text-sm text-[#9fe8c8] m-0">Automatic AI detection of a hood or duct length from a photo alone is NOT in this build, on purpose. Without a known scale, camera angle and depth, an AI guess in feet would be invented data, and this is a compliance / bidding tool. The next step for true auto-detect is a vision API (with its own key, kept out of the app file) plus this same calibration step — and even then, tape-verify it. What IS in this build: on-device metadata, calibrated tap-to-measure, and a measurement list you can push straight into Measured Duct Pieces. If you want, you can also drop a photo in this chat and I can describe what is in it and read any visible labels — that is a separate, human-checked step, not an automatic measurement.</p>
+    </section>
+  </div>
+
 </div>
 
 <!-- Tutorial Modal -->
@@ -654,6 +713,202 @@ audit();
 renderLib();
 window.addEventListener('resize', sizeCanvas);
 
+</script>
+
+<script>
+// ========== PHOTO INTEL ==========
+// On-device only: EXIF/OSINT metadata + calibrated tap-to-measure.
+// No photo is uploaded. No automatic AI dimension detection is claimed.
+(function(){
+  const fileEl = document.getElementById('photoFile');
+  const cv = document.getElementById('photoCanvas');
+  const ctx2 = cv.getContext('2d');
+  const hintEl = document.getElementById('photoHint');
+  const intelEl = document.getElementById('photoIntel');
+  const scaleEl = document.getElementById('photoScale');
+  const measEl = document.getElementById('photoMeasures');
+  let img = null, fileInfo = null, exifData = null;
+  let mode = 'cal';
+  let calPts = [], measPts = [], segments = [];
+  let ftPerPx = null, refFtUsed = null;
+
+  function fmt(n){ return (Math.round(n*10)/10); }
+  function setMode(m){
+    mode = m;
+    document.getElementById('photoModeCal').textContent = m==='cal' ? 'MODE: CALIBRATE ✓' : 'MODE: CALIBRATE';
+    document.getElementById('photoModeMeas').textContent = m==='meas' ? 'MODE: MEASURE ✓' : 'MODE: MEASURE';
+    hintEl.textContent = m==='cal'
+      ? 'CALIBRATE: tap the two ends of something you know the length of, then SET SCALE.'
+      : 'MEASURE: tap two points per segment. Each pair becomes one measured segment.';
+    drawPhoto();
+  }
+  document.getElementById('photoModeCal').onclick = () => setMode('cal');
+  document.getElementById('photoModeMeas').onclick = () => setMode('meas');
+
+  function drawPhoto(){
+    if(!img){ return; }
+    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    ctx2.clearRect(0,0,cv.width,cv.height);
+    ctx2.drawImage(img,0,0);
+    // calibration segment, green
+    if(calPts.length===2){
+      ctx2.strokeStyle='#00ff87'; ctx2.lineWidth=Math.max(3, cv.width/300);
+      ctx2.beginPath(); ctx2.moveTo(calPts[0].x,calPts[0].y); ctx2.lineTo(calPts[1].x,calPts[1].y); ctx2.stroke();
+    }
+    calPts.forEach(p=>{ ctx2.fillStyle='#00ff87'; ctx2.beginPath(); ctx2.arc(p.x,p.y,Math.max(6,cv.width/150),0,Math.PI*2); ctx2.fill(); });
+    // measurement segments, cyan, with labels
+    for(let i=0;i<segments.length;i++){
+      const s=segments[i];
+      ctx2.strokeStyle='#60efff'; ctx2.lineWidth=Math.max(3, cv.width/300);
+      ctx2.beginPath(); ctx2.moveTo(s.a.x,s.a.y); ctx2.lineTo(s.b.x,s.b.y); ctx2.stroke();
+      ctx2.fillStyle='#0a0a0f'; ctx2.fillRect((s.a.x+s.b.x)/2-50,(s.a.y+s.b.y)/2-28,100,28);
+      ctx2.fillStyle='#60efff'; ctx2.font=Math.max(20,cv.width/40)+'px monospace'; ctx2.textAlign='center';
+      ctx2.fillText(s.ft!=null ? fmt(s.ft)+' ft' : 'no scale', (s.a.x+s.b.x)/2, (s.a.y+s.b.y)/2-6);
+    }
+    // in-progress measure points, pink
+    const pending = measPts.slice(segments.length*2);
+    pending.forEach(p=>{ ctx2.fillStyle='#ff0080'; ctx2.beginPath(); ctx2.arc(p.x,p.y,Math.max(6,cv.width/150),0,Math.PI*2); ctx2.fill(); });
+  }
+  function renderMeasures(){
+    if(!segments.length){ measEl.innerHTML='No measured segments yet.'; return; }
+    const total = segments.reduce((s,x)=>s+(x.ft||0),0);
+    measEl.innerHTML = segments.map((s,i)=> (i+1)+'. '+s.type+' — '+(s.ft!=null?fmt(s.ft)+' ft':'not calibrated')).join('<br>')
+      + '<br><b>Total measured: '+fmt(total)+' ft</b> (calibrated estimate — verify with a tape)';
+  }
+  function pxDist(a,b){ return Math.hypot(a.x-b.x, a.y-b.y); }
+
+  fileEl.onchange = async (ev) => {
+    const f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    fileInfo = { name:f.name, size:f.size, type:f.type, lastModified:new Date(f.lastModified).toLocaleString() };
+    calPts=[]; measPts=[]; segments=[]; ftPerPx=null; refFtUsed=null;
+    scaleEl.textContent='Not calibrated yet. In CALIBRATE mode, tap the two ends of your reference object first.';
+    renderMeasures();
+    const url = URL.createObjectURL(f);
+    img = new Image();
+    img.onload = () => { drawPhoto(); hintEl.textContent='Photo loaded. CALIBRATE first, then MEASURE.'; };
+    img.src = url;
+    // OSINT metadata, on-device via exifr if available
+    let rows = [];
+    rows.push(['File', f.name]);
+    rows.push(['Size', (f.size/1024).toFixed(1)+' KB']);
+    rows.push(['Last modified', fileInfo.lastModified]);
+    let ex = null;
+    try{
+      if(window.exifr){ ex = await window.exifr.parse(f, {gps:true}); }
+    }catch(e){ ex = null; }
+    exifData = ex;
+    if(ex){
+      const pick = (k)=> ex[k]!=null ? String(ex[k]) : null;
+      const show = [
+        ['Camera', [pick('Make'), pick('Model')].filter(Boolean).join(' ')],
+        ['Lens', pick('LensModel')],
+        ['Taken', ex.DateTimeOriginal ? new Date(ex.DateTimeOriginal).toLocaleString() : null],
+        ['Focal length', ex.FocalLength ? ex.FocalLength+' mm' : null],
+        ['Aperture', ex.FNumber ? 'f/'+ex.FNumber : null],
+        ['Shutter', ex.ExposureTime ? ex.ExposureTime+' s' : null],
+        ['ISO', pick('ISO')],
+        ['GPS latitude', ex.latitude!=null ? ex.latitude.toFixed(6) : null],
+        ['GPS longitude', ex.longitude!=null ? ex.longitude.toFixed(6) : null],
+        ['GPS altitude', ex.altitude!=null ? ex.altitude+' m' : null],
+      ].filter(r=>r[1]);
+      rows = rows.concat(show);
+      if(ex.latitude==null) rows.push(['GPS', 'No GPS in this photo (common if location was off, or the photo was screenshotted / re-saved).']);
+    } else {
+      rows.push(['EXIF', 'No EXIF reader available, or this photo has no EXIF. Basic file info above still applies.']);
+    }
+    intelEl.innerHTML = rows.map(r=>'<div><b>'+r[0]+':</b> '+r[1]+'</div>').join('');
+  };
+
+  cv.addEventListener('pointerdown', (ev) => {
+    if(!img) { hintEl.textContent='Load a photo first.'; return; }
+    const r = cv.getBoundingClientRect();
+    const x = (ev.clientX - r.left) * (cv.width / r.width);
+    const y = (ev.clientY - r.top) * (cv.height / r.height);
+    const pt = {x:Math.round(x), y:Math.round(y)};
+    if(mode==='cal'){
+      calPts.push(pt); if(calPts.length>2) calPts.shift();
+      hintEl.textContent = calPts.length===2 ? 'Reference tapped. Enter its known length and press SET SCALE.' : 'First calibration point tapped. Tap the other end.';
+    } else {
+      measPts.push(pt);
+      if(measPts.length % 2 === 0){
+        const a = measPts[measPts.length-2], b = measPts[measPts.length-1];
+        const d = pxDist(a,b);
+        segments.push({a:a, b:b, type:document.getElementById('photoPieceType').value, px:d, ft: ftPerPx ? d*ftPerPx : null});
+        renderMeasures();
+      }
+    }
+    drawPhoto();
+  });
+
+  document.getElementById('photoSetScale').onclick = () => {
+    if(calPts.length!==2){ scaleEl.textContent='Tap 2 calibration points first.'; return; }
+    const ref = +document.getElementById('photoRefFt').value;
+    if(!ref || ref<=0){ scaleEl.textContent='Enter a known reference length greater than 0.'; return; }
+    const d = pxDist(calPts[0], calPts[1]);
+    if(d < 10){ scaleEl.textContent='Calibration points are too close together. Tap farther apart.'; return; }
+    ftPerPx = ref / d; refFtUsed = ref;
+    segments.forEach(s=>{ s.ft = s.px * ftPerPx; });
+    renderMeasures(); drawPhoto();
+    scaleEl.textContent = 'Calibrated: 1 px = '+ftPerPx.toFixed(5)+' ft (reference '+ref+' ft over '+Math.round(d)+' px). Measurements below are estimates — verify with a tape.';
+  };
+  document.getElementById('photoUndo').onclick = () => {
+    if(mode==='cal' && calPts.length) calPts.pop();
+    else if(measPts.length){
+      measPts.pop();
+      if(segments.length > Math.floor(measPts.length/2)) segments.pop();
+    }
+    renderMeasures(); drawPhoto();
+  };
+  document.getElementById('photoClear').onclick = () => {
+    calPts=[]; measPts=[]; segments=[]; renderMeasures(); drawPhoto();
+    hintEl.textContent='Measurements cleared. Calibration scale is kept — re-tap to recalibrate if you change photos.';
+  };
+  document.getElementById('photoAddPieces').onclick = () => {
+    const ready = segments.filter(s=>s.ft!=null);
+    if(!ready.length){ alert('Calibrate first, then measure at least one segment.'); return; }
+    ready.forEach(s=>{
+      state.pieces.push({type:s.type, len:Math.round(s.ft*2)/2, panels:0});
+    });
+    const listEl = document.getElementById('pieceList');
+    if(listEl) listEl.innerHTML = state.pieces.map(x => x.type+' '+x.len+'ft ('+x.panels+' panels)').join('<br>');
+    if(typeof audit === 'function') audit();
+    hintEl.textContent = ready.length+' segment(s) added to Measured Duct Pieces. Open tab 2 · DESCRIBE / MEASURE to see them, then SAVE SITE.';
+  };
+  document.getElementById('photoExportJson').onclick = () => {
+    const strip = document.getElementById('photoStripGps').checked;
+    const gps = (exifData && exifData.latitude!=null && !strip)
+      ? {latitude:exifData.latitude, longitude:exifData.longitude, altitude:exifData.altitude||null} : null;
+    const out = {
+      app:'NEXUS Duct — Photo Intel', site:document.getElementById('name') ? document.getElementById('name').value : '',
+      exportedAt:new Date().toISOString(), photo:fileInfo,
+      exif: exifData ? {camera:[exifData.Make, exifData.Model].filter(Boolean).join(' '), taken:exifData.DateTimeOriginal||null, gps:gps, gpsStripped:strip} : null,
+      calibration: ftPerPx ? {referenceFt:refFtUsed, ftPerPx:ftPerPx, points:calPts} : null,
+      measurements: segments.map(s=>({type:s.type, lengthFt: s.ft!=null ? Math.round(s.ft*10)/10 : null, pixels:Math.round(s.px)})),
+      accuracyNote:'Calibrated photo estimate only. Straight-on photo, reference in the same plane as the measured object. Verify with a tape for bidding / compliance.'
+    };
+    const blob = new Blob([JSON.stringify(out,null,2)], {type:'application/json'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='nexus-photo-intel.json'; a.click();
+  };
+  document.getElementById('photoExportPng').onclick = () => {
+    if(!img){ alert('Load a photo first.'); return; }
+    drawPhoto();
+    cv.toBlob((blob)=>{
+      if(!blob) return;
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='nexus-photo-measured.png'; a.click();
+    }, 'image/png');
+  };
+  setMode('cal');
+})();
+</script>
+
+<script>
+// Register the PWA service worker (cached app shell + offline fallback).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
 </script>
 </body>
 </html>
