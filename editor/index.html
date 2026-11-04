@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>NEXUS EDITOR · ours, local</title>
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+<link rel="apple-touch-icon" href="icon.svg"/>
+<style>
+:root{--g:#00ff87;--c:#60efff;--bg:#07070a;--panel:#0e1410;--line:#223322}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:#eafff3;font:14px/1.45 system-ui,sans-serif}
+header{padding:10px 12px;border-bottom:1px solid var(--line)} header b{color:var(--g);letter-spacing:.12em}
+header p{margin:4px 0 0;opacity:.75;font-size:12px}
+.toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);align-items:center}
+button,input[type=file]{background:#12261a;color:var(--g);border:1px solid var(--line);padding:8px 10px;font:inherit;cursor:pointer}
+button.on{background:var(--g);color:#000} label{font-size:12px;opacity:.8}
+#status{margin-left:auto;font-size:12px;color:var(--c)}
+main{display:flex;flex-direction:column;height:calc(100vh - 118px)}
+@media(min-width:900px){main{flex-direction:row}}
+.pane{flex:1;display:flex;flex-direction:column;min-height:0;border-top:1px solid var(--line)}
+.pane h3{margin:0;padding:6px 10px;font-size:11px;letter-spacing:.15em;color:var(--c)}
+textarea{flex:1;width:100%;resize:none;background:var(--panel);color:#eafff3;border:0;border-top:1px solid var(--line);padding:10px;font:12px/1.5 ui-monospace,Menlo,monospace;outline:none}
+iframe{flex:1;width:100%;border:0;border-top:1px solid var(--line);background:#fff}
+#log{max-height:90px;overflow:auto;padding:6px 10px;font:11px/1.4 ui-monospace,Menlo,monospace;color:#ffcc00;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<header><img src="icon.svg" alt="" width="28" height="28" style="vertical-align:-7px;margin-right:6px"/><b>NEXUS EDITOR</b> · real-time, ours
+<p>No upload, no outside editor site, no account. Your code stays in this browser tab until you hit Download. Open a file from your device, edit, watch the preview update.</p></header>
+<div class="toolbar">
+<input type="file" id="openFile" accept=".html,.htm,.txt"/>
+<input type="file" id="packFile" accept=".json" title="Optional: cctv-pack.json for multi-file apps like Eye"/>
+<button type="button" id="runBtn">RUN ▶</button>
+<button type="button" id="autoBtn" class="on">AUTO: ON</button>
+<button type="button" id="sampleBtn">LOAD SAMPLE</button>
+<button type="button" id="downloadBtn">DOWNLOAD .HTML</button>
+<button type="button" id="clearBtn">CLEAR</button>
+<span id="status">Ready — nothing sent anywhere.</span>
+</div>
+<main>
+<div class="pane"><h3>CODE</h3><textarea id="code" spellcheck="false" placeholder="Paste or open HTML here…"></textarea></div>
+<div class="pane"><h3>PREVIEW · LIVE</h3><iframe id="preview" sandbox="allow-scripts allow-same-origin allow-modals"></iframe><div id="log"></div></div>
+</main>
+<script>
+const code=document.getElementById('code'), frame=document.getElementById('preview'),
+  status=document.getElementById('status'), log=document.getElementById('log');
+let auto=true, timer=null, fileName='nexus-editor-page.html', packText=null;
+function note(m){status.textContent=m+' · '+new Date().toLocaleTimeString();}
+function run(){
+  let src=code.value;
+  if(packText){
+    const shim='<script>(function(){var P='+JSON.stringify(packText)+';var OF=window.fetch;window.fetch=function(u){if(String(u).indexOf("cctv-pack.json")>=0){return Promise.resolve(new Response(P,{headers:{"Content-Type":"application/json"}}));}return OF.apply(this,arguments);};})();<\/script>';
+    src=src.replace(/(<body[^>]*>)/i, '$1'+shim);
+    if(src===code.value) src=shim+src;
+  }
+  frame.srcdoc=src;
+  note('Preview updated — local only'+(packText?' · pack injected':''));
+}
+function schedule(){ if(!auto) return; clearTimeout(timer); timer=setTimeout(run,400); }
+code.addEventListener('input', schedule);
+document.getElementById('runBtn').onclick=run;
+document.getElementById('autoBtn').onclick=e=>{auto=!auto;e.target.classList.toggle('on',auto);e.target.textContent=auto?'AUTO: ON':'AUTO: OFF';note(auto?'Auto preview on':'Auto preview off — hit RUN');};
+document.getElementById('sampleBtn').onclick=()=>{
+  code.value='<!DOCTYPE html>\n<html>\n<body style="font-family:system-ui;background:#07070a;color:#00ff87;padding:20px">\n<h1>It works.</h1>\n<p>Edit this text and watch the preview change — no server, no upload.</p>\n<button onclick="document.body.style.background=\'#12261a\'">Tap me</button>\n</body>\n</html>';
+  run();
+};
+document.getElementById('clearBtn').onclick=()=>{code.value='';frame.srcdoc='';note('Cleared');};
+document.getElementById('downloadBtn').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([code.value],{type:'text/html'}));
+  a.download=fileName; a.click(); URL.revokeObjectURL(a.href); note('Downloaded to your device — not uploaded anywhere');
+};
+document.getElementById('packFile').onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{packText=r.result; note('Pack loaded: '+f.name+' ('+packText.length+' bytes) — fetch for cctv-pack.json will be answered locally');};
+  r.readAsText(f);
+};
+document.getElementById('openFile').onchange=ev=>{
+  const f=ev.target.files[0]; if(!f) return; fileName=f.name;
+  const r=new FileReader();
+  r.onload=()=>{code.value=r.result; run(); note('Loaded '+f.name+' from your device');};
+  r.readAsText(f);
+};
+frame.addEventListener('load',()=>{
+  try{ frame.contentWindow.onerror=(m,src,line)=>{ log.textContent='Preview error: '+m+' (line '+line+')'; }; }catch(e){}
+});
+code.value=document.getElementById('sampleBtn').onclick ? '' : '';
+note('Ready — nothing sent anywhere.');
+</script>
+</body>
+</html>
