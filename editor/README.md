@@ -9,4 +9,4 @@ Real-time HTML editor, ours, local-first. No account, no upload, no outside edit
 
 Live: https://antmanthepro.github.io/editor/
 
-Icon: `icon.svg` — neon `</>` with a live dot, NEXUS green/cyan/pink on dark.
+**Custom Icon**: Enhanced neon `</>` with live pink/yellow pulse, NEXUS green/cyan on dark. Optimized for home screen / PWA. See `icon.svg` and `manifest.webmanifest`.
