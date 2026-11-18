@@ -7,7 +7,10 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="NEXUS VAULT">
 <title>NEXUS · OSINT VAULT</title>
-<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230a0a0f'/><path d='M18 44 L32 14 L46 44 M24 32 H40' fill='none' stroke='%2300ff87' stroke-width='2.6' stroke-linecap='round'/><circle cx='32' cy='32' r='3' fill='%23ff0080'/></svg>">
+<link rel="icon" href="./icons/favicon.ico"/>
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/favicon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/favicon-512.png"/>
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
 :root{--g:#00ff87;--c:#60efff;--p:#ff0080;--y:#ffcc00;--bg:#0a0a0f;--ink:#e8fff4;--dim:#8aa89a;--line:rgba(0,255,135,.28)}
@@ -178,7 +181,10 @@ th{color:var(--y);font-size:10px;letter-spacing:.1em}
     </div>
     <div id="caseWrap"><canvas id="caseCanvas"></canvas></div>
     <p class="lede" id="caseStat"></p>
-  </section>
+  <footer style="margin-top:14px;border-top:1px solid var(--line);padding:12px 4px 0;font-size:10px;line-height:1.6;color:var(--dim)">
+    <div style="color:var(--y);letter-spacing:.1em">VAULT RULE #0 &mdash; IF THE CLUE WAS ON PAGE ONE OF GOOGLE, IT WASN&rsquo;T A CLUE. IT WAS A BILLBOARD.</div>
+    <div style="font-size:9px">Fine print, DoubleA style: no persons were scraped in the making of this vault. SHELF clones public repos, LINKS opens public sites, BENCH only reads text you paste, and CASE stays in your browser. Not perfect, just real &mdash; NEXUS.</div>
+  </footer>
 </main>
 <script>
 const TARGET = "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918";
